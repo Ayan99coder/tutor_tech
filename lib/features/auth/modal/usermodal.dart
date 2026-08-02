@@ -8,6 +8,12 @@ enum UserRole {
   parent,
 }
 
+enum ApplicationStatus {
+  pending,
+  approved,
+  rejected,
+}
+
 extension UserRoleExtension on UserRole {
   String get displayName {
     switch (this) {
@@ -46,6 +52,7 @@ class UserModel {
   final bool isActive;
   final bool isOnline;
   final DateTime createdAt;
+  final ApplicationStatus applicationStatus;
 
   const UserModel({
     required this.id,
@@ -57,6 +64,7 @@ class UserModel {
     this.isActive = true,
     this.isOnline = false,
     required this.createdAt,
+   required this.applicationStatus,
   });
 
   UserModel copyWith({
@@ -69,6 +77,7 @@ class UserModel {
     bool? isActive,
     bool? isOnline,
     DateTime? createdAt,
+    ApplicationStatus? applicationStatus,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -80,6 +89,7 @@ class UserModel {
       isActive: isActive ?? this.isActive,
       isOnline: isOnline ?? this.isOnline,
       createdAt: createdAt ?? this.createdAt,
+      applicationStatus: applicationStatus ?? this.applicationStatus,
     );
   }
 
@@ -94,6 +104,7 @@ class UserModel {
       'is_active': isActive,
       'is_online': isOnline,
       'created_at': createdAt.toIso8601String(),
+      'application_status': applicationStatus.name,
     };
   }
 
@@ -101,18 +112,30 @@ class UserModel {
     return UserModel(
       id: json['id'] as String,
       email: json['email'] as String,
-      fullName: json['full_name'] as String? ?? json['fullName'] as String? ?? '',
+      fullName: json['full_name'] as String? ??
+          json['fullName'] as String? ??
+          '',
       role: UserRole.values.firstWhere(
             (r) => r.name == json['role'],
         orElse: () => UserRole.student,
       ),
-      profileImageUrl: json['profile_image_url'] as String? ?? json['profileImageUrl'] as String?,
-      phoneNumber: json['phone_number'] as String? ?? json['phoneNumber'] as String?,
-      isActive: json['is_active'] as bool? ?? json['isActive'] as bool? ?? true,
-      isOnline: json['is_online'] as bool? ?? json['isOnline'] as bool? ?? false,
+      profileImageUrl: json['profile_image_url'] as String? ??
+          json['profileImageUrl'] as String?,
+      phoneNumber: json['phone_number'] as String? ??
+          json['phoneNumber'] as String?,
+      isActive: json['is_active'] as bool? ??
+          json['isActive'] as bool? ??
+          true,
+      isOnline: json['is_online'] as bool? ??
+          json['isOnline'] as bool? ??
+          false,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
+      applicationStatus: ApplicationStatus.values.firstWhere(
+            (status) => status.name == json['application_status'],
+        orElse: () => ApplicationStatus.pending,
+      ),
     );
   }
 }
