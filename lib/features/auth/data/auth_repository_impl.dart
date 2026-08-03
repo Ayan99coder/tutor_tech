@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tutor_tech/features/auth/modal/auth_repository.dart';
+import 'package:tutor_tech/features/parent/model/parent_model.dart';
+import 'package:tutor_tech/features/tutor/model/tutor_model.dart';
 
 import '../../student/model/student_model.dart';
 import '../modal/usermodal.dart';
@@ -23,14 +25,14 @@ class AuthRepositoryImpl extends AuthRepository {
     String? parentEmail,
   }) async {
     if (isUnder13 && (parentEmail == null || parentEmail.isEmpty)) {
-      throw "Parents Email must be Provide!";
+      throw Exception("Parents Email must be Provide!");
     }
     final cred = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
     if (cred.user == null) {
-      throw "register failed please try again";
+      throw Exception("register failed please try again");
     }
     final newUser = UserModel(
       id: cred.user!.uid,
@@ -64,6 +66,97 @@ class AuthRepositoryImpl extends AuthRepository {
     if (!cred.user!.emailVerified) {
       await cred.user!.sendEmailVerification();
     }
+    return newUser;
+  }
+
+  Future<UserModel> registerParents({
+    required String fullName,
+    required String email,
+    required String password,
+    required List<String> childrenEmails,
+  }) async {
+    final cred = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    if (cred.user == null) throw Exception('');
+    final newUser = UserModel(
+      id: cred.user!.uid,
+      email: email,
+      fullName: fullName,
+      role: UserRole.parent,
+      createdAt: DateTime.now(),
+      applicationStatus: ApplicationStatus.pending,
+    );
+    await _firestore.collection('users').doc(newUser.id).set(newUser.toJson());
+    List<String> childrenIds = [];
+    for (final childEmail in childrenEmails) {
+      final snapshot = await _firestore
+          .collection("users")
+          .where('emails', isEqualTo: childEmail)
+          .where('role', isEqualTo: UserRole.student.name)
+          .limit(1)
+          .get();
+      if (snapshot.docs.isNotEmpty) {
+        childrenIds.add(snapshot.docs.first.id);
+        await _firestore
+            .collection('students')
+            .doc(snapshot.docs.first.id)
+            .update({'parent_id': newUser.id});
+      }
+    }
+    final newParent = ParentModel(
+      id: newUser.id,
+      userId: newUser.id,
+      fullName: fullName,
+      email: email,
+      childrenIds: childrenIds,
+      createdAt: DateTime.now(),
+    );
+    await _firestore
+        .collection('parent')
+        .doc(newParent.id)
+        .set(newParent.toJson());
+    return newUser;
+  }
+
+  Future<UserModel> registerTutors({
+    required String fullName,
+    required String email,
+    required String password,
+    required String education,
+    required String teachingExperience,
+    required List<String> subjects,
+    required List<String> teachingLevels,
+    String? cvLink,
+  }) async {
+    final cred = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    if (cred.user == null) throw Exception("");
+    final newUser = UserModel(
+      id: cred.user!.uid,
+      email: email,
+      fullName: fullName,
+      role: UserRole.tutor,
+      createdAt: DateTime.now(),
+      applicationStatus: ApplicationStatus.pending,
+    );
+    final newTutor = TutorModel(
+      id: newUser.id,
+      userId: newUser.id,
+      fullName: fullName,
+      email: email,
+      availability: [],
+      education: education,
+      teachingExperience: teachingExperience,
+      subjectExpertise: subjects,
+      teachingLevels: teachingLevels,
+      createdAt: DateTime.now(),
+    );
+    await _firestore.collection('users').doc(newUser.id).set(newUser.toJson());
+    await _firestore.collection('tutor').doc().set(newTutor.toJson());
     return newUser;
   }
 }
