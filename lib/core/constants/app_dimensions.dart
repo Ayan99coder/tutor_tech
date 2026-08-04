@@ -1,4 +1,4 @@
-class AppDimensions {
+  class AppDimensions {
   // 8pt Spacing Scale
   static const double xs  = 4.0;
   static const double sm  = 8.0;

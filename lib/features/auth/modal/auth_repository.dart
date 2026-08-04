@@ -32,4 +32,5 @@ abstract class AuthRepository {
     required List<String> teachingLevels,
     String? cvLink,
   });
+  Future<UserModel?> getCurrentUser();
 }

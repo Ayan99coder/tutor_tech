@@ -13,6 +13,7 @@ class AuthRepositoryImpl extends AuthRepository {
 
   AuthRepositoryImpl(this._auth, this._firestore);
 
+  @override
   Future<UserModel> registerStudent({
     required String fullName,
     required String email,
@@ -69,6 +70,7 @@ class AuthRepositoryImpl extends AuthRepository {
     return newUser;
   }
 
+  @override
   Future<UserModel> registerParents({
     required String fullName,
     required String email,
@@ -120,6 +122,7 @@ class AuthRepositoryImpl extends AuthRepository {
     return newUser;
   }
 
+  @override
   Future<UserModel> registerTutors({
     required String fullName,
     required String email,
@@ -158,5 +161,17 @@ class AuthRepositoryImpl extends AuthRepository {
     await _firestore.collection('users').doc(newUser.id).set(newUser.toJson());
     await _firestore.collection('tutor').doc().set(newTutor.toJson());
     return newUser;
+  }
+
+  @override
+  Future<UserModel?> getCurrentUser() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      final doc = await _firestore.collection('users').doc(user.uid).get();
+      if (doc.exists && doc.data() != null) {
+        return UserModel.fromJson(doc.data()!);
+      }
+    }
+    return null;
   }
 }
