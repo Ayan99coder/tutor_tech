@@ -1,3 +1,5 @@
+import '../../../core/constants/app_colors.dart';
+import 'package:flutter/material.dart';
 enum AgeGroup {
   primary,
   elevenPlus,
@@ -17,7 +19,44 @@ enum CommunicationPref {
   studentOnly,
   both,
 }
+enum SubjectStage {
+  primary,
+  elevenPlus,
+  gcse,
+  aLevel,
+  btec,
+}
+extension SubjectStageExtension on SubjectStage {
+  Color get color {
+    switch (this) {
+      case SubjectStage.primary:
+        return AppColors.primaryStage;
+      case SubjectStage.elevenPlus:
+        return AppColors.elevenPlus;
+      case SubjectStage.gcse:
+        return AppColors.gcseColor;
+      case SubjectStage.aLevel:
+        return AppColors.aLevelColor;
+      case SubjectStage.btec:
+        return AppColors.btecColor;
+    }
+  }
 
+  String get displayName {
+    switch (this) {
+      case SubjectStage.primary:
+        return 'Primary';
+      case SubjectStage.elevenPlus:
+        return '11+';
+      case SubjectStage.gcse:
+        return 'GCSE';
+      case SubjectStage.aLevel:
+        return 'A-Level';
+      case SubjectStage.btec:
+        return 'BTEC';
+    }
+  }
+}
 class StudentModel {
   final String id;
   final String userId;

@@ -12,6 +12,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/custom_textfield.dart';
 import '../../../core/widgets/loading_overlay.dart';
+import '../../student/model/student_model.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -37,6 +38,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _parentEmailController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  // Student
+  SubjectStage _selectedStage = SubjectStage.gcse;
   DateTime? _selectedDOB;
   bool _isUnder13 = false;
 
@@ -382,6 +386,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _studentSpecificTask() {
+    return Column(
+      crossAxisAlignment: .start,
+      children: [
+        Text('What are you studying?', style: AppTextStyles.h2),
+        const SizedBox(height: 16),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: SubjectStage.values.map((e) {
+              final isSelect = _selectedStage == e;
+              return ChoiceChip(
+                label: Text(e.displayName),
+                selected: isSelect,
+                onSelected: (val) {
+                  if (val) {
+                    setState(() {
+                      _selectedStage = e;
+                    });
+                  }
+                },
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text('Select Subjects (Max 3)', style: AppTextStyles.labelLarge),
+        const SizedBox(height: 8),
+
+      ],
     );
   }
 }
