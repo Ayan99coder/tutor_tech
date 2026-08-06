@@ -1,12 +1,15 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutor_tech/core/constants/app_dimensions.dart';
 import 'package:tutor_tech/core/utils/validators.dart';
 import 'package:tutor_tech/core/widgets/custom_appbar.dart';
 import 'package:tutor_tech/core/widgets/custom_button.dart';
+import 'package:tutor_tech/core/widgets/subject_chip.dart';
 import 'package:tutor_tech/features/auth/modal/usermodal.dart';
 import 'package:tutor_tech/features/auth/provider/auth_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:tutor_tech/features/subjects/subject_model.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -43,6 +46,45 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   SubjectStage _selectedStage = SubjectStage.gcse;
   DateTime? _selectedDOB;
   bool _isUnder13 = false;
+  final List<String> _selectedSubjects = [];
+  GroupSize _selectedGroupSize = GroupSize.oneToOne;
+//consent
+  bool _recordingConsent = false;
+  bool _legalConsent = false;
+  //tutor
+  final _educationController = TextEditingController();
+  final _experienceController = TextEditingController();
+  final List<String> _tutorSubjectSlugs = [];
+  final List<String> _tutorTeachingLevels = [];
+  String? _resumeFileName;
+  String? _resumeUrl;
+  //parents
+  final List<TextEditingController> _childEmailControllers = [
+    TextEditingController()
+  ];
+
+
+  Future<void> _pickResumeFile() async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        setState(() {
+          _resumeFileName = result.files.single.name;
+          _resumeUrl = result.files.single.path;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not pick file: $e')));
+      }
+    }
+  }
 
   void validate0() {
     if (_selectedRole == null) {
@@ -83,6 +125,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         _currentStep = 2;
       });
     }
+  }
+
+  void _validateStep2() {
+    if (_selectedRole == UserRole.student) {
+      if (_selectedSubjects.isEmpty) {
+        setState(() => _stepError = 'Please select at least 1 subject');
+        return;
+      }
+    } else if (_selectedRole == UserRole.tutor) {
+      if (_educationController.text.isEmpty ||
+          _experienceController.text.isEmpty) {
+        setState(
+          () => _stepError = 'Please provide your education and experience',
+        );
+        return;
+      }
+      if (_tutorSubjectSlugs.isEmpty || _tutorTeachingLevels.isEmpty) {
+        setState(
+          () => _stepError =
+              'Please select at least 1 subject and 1 teaching level',
+        );
+        return;
+      }
+    } else if (_selectedRole == UserRole.parent) {
+      // No strict validation for child emails, they can be empty
+    }
+
+    setState(() {
+      _currentStep = 3;
+      _stepError = null;
+    });
   }
 
   void _onDOBSelected(DateTime dob) {
@@ -332,6 +405,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ],
                   ),
                 ],
+                if (_currentStep == 2) ...[
+                  _selectedRole == UserRole.student
+                      ? _studentSpecificTask()
+                      : _selectedRole == UserRole.tutor
+                      ? _buildTutorSpecificTask()
+                      : _buildParentSpecificTask(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomButton(
+                          label: 'Back',
+                          variant: ButtonVariant.outline,
+                          onPressed: () => setState(() => _currentStep = 1),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: CustomButton(
+                          label: AppStrings.nextButton,
+                          onPressed: _validateStep2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ],
           ),
@@ -389,6 +487,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
+  Widget _buildParentSpecificTask() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Link Your Children', style: AppTextStyles.h2),
+        const SizedBox(height: 8),
+        Text(
+            'Enter the email addresses your children used to register. They will be linked to your dashboard automatically.',
+            style: AppTextStyles.bodyMedium),
+        const SizedBox(height: 24),
+        ...List.generate(_childEmailControllers.length, (index) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: CustomTextField(
+              label: 'Child ${index + 1} Email',
+              hint: 'e.g. child@example.com',
+              controller: _childEmailControllers[index],
+              keyboardType: TextInputType.emailAddress,
+            ),
+          );
+        }),
+        if (_childEmailControllers.length < 3)
+          TextButton.icon(
+            icon: const Icon(Icons.add),
+            label: const Text('Add Another Child'),
+            onPressed: () {
+              setState(() {
+                _childEmailControllers.add(TextEditingController());
+              });
+            },
+          ),
+      ],
+    );
+  }
+
   Widget _studentSpecificTask() {
     return Column(
       crossAxisAlignment: .start,
@@ -417,7 +550,185 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         const SizedBox(height: 20),
         Text('Select Subjects (Max 3)', style: AppTextStyles.labelLarge),
         const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: seededSubjects.where((e) => e.stage == _selectedStage).map((
+            e,
+          ) {
+            final isSelect = _selectedSubjects.contains(e.slug);
+            return SubjectChip(
+              emoji: e.emoji,
+              displayName: e.displayName,
+              isSelected: isSelect,
+              onTap: () {
+                if (isSelect) {
+                  _selectedSubjects.remove(e.slug);
+                } else if (_selectedSubjects.length < 3) {
+                  _selectedSubjects.add(e.slug);
+                }
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+        Text('Preferred Group Size', style: AppTextStyles.labelLarge),
+        const SizedBox(height: 8),
+        Row(
+          children: GroupSize.values.map((e) {
+            final isSelect = _selectedGroupSize == e;
+            String title = _selectedGroupSize == GroupSize.oneToOne
+                ? '1-to-1'
+                : _selectedGroupSize == GroupSize.oneToFive
+                ? '1-to-5'
+                : '1-to-10';
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedGroupSize = e;
+                });
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isSelect
+                      ? AppColors.primary.withValues(alpha: 0.1)
+                      : AppColors.surfaceCard,
+                  border: Border.all(
+                    color: isSelect ? AppColors.primary : AppColors.border,
+                    width: isSelect ? 2 : 1,
+                  ),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                ),
+                child: Center(child: Text(title, style: AppTextStyles.h4)),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
 
+  Widget _buildTutorSpecificTask() {
+    return Column(
+      crossAxisAlignment: .start,
+      children: [
+        Text('Tutor Profile', style: AppTextStyles.h2),
+        const SizedBox(height: 8),
+        Text(
+          'Provide your qualifications to help us approve your application.',
+          style: AppTextStyles.bodyMedium,
+        ),
+        const SizedBox(height: 24),
+        CustomTextField(
+          label: 'Teaching Experience',
+          hint: 'Briefly describe your tutoring experience',
+          controller: _experienceController,
+        ),
+        const SizedBox(height: 24),
+        Text('Teaching Levels', style: AppTextStyles.labelLarge),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: ['Primary', '11+', 'GCSE', 'A-Level'].map((level) {
+            final isSel = _tutorTeachingLevels.contains(level);
+            return FilterChip(
+              label: Text(level),
+              selected: isSel,
+              onSelected: (val) {
+                setState(() {
+                  if (val) {
+                    _tutorTeachingLevels.add(level);
+                  } else {
+                    _tutorTeachingLevels.remove(level);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+        Text('Subjects You Teach', style: AppTextStyles.labelLarge),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: ['Maths', 'Physics', 'Biology', 'Chemistry', 'English'].map(
+            (sub) {
+              final isSel = _tutorSubjectSlugs.contains(sub);
+              return FilterChip(
+                label: Text(sub),
+                selected: isSel,
+                onSelected: (val) {
+                  setState(() {
+                    if (val) {
+                      _tutorSubjectSlugs.add(sub);
+                    } else {
+                      _tutorSubjectSlugs.remove(sub);
+                    }
+                  });
+                },
+              );
+            },
+          ).toList(),
+        ),
+        const SizedBox(height: 24),
+        Text('Upload Resume / CV (PDF)', style: AppTextStyles.labelLarge),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceCard,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+            border: Border.all(
+              color: _resumeFileName != null
+                  ? AppColors.success
+                  : AppColors.border,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _resumeFileName != null
+                    ? Icons.description_rounded
+                    : Icons.cloud_upload_outlined,
+                color: _resumeFileName != null
+                    ? AppColors.success
+                    : AppColors.primary,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _resumeFileName ?? 'Select PDF or DOC file',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: _resumeFileName != null
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: _resumeFileName != null
+                            ? AppColors.success
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      _resumeFileName != null
+                          ? 'CV Attached'
+                          : 'Attach your resume for admin review',
+                      style: AppTextStyles.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.folder_open, size: 16),
+                label: Text(_resumeFileName != null ? 'Change' : 'Browse'),
+                onPressed: _pickResumeFile,
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
