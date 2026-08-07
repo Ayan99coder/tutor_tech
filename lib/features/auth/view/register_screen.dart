@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutor_tech/core/constants/app_dimensions.dart';
@@ -48,9 +49,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _isUnder13 = false;
   final List<String> _selectedSubjects = [];
   GroupSize _selectedGroupSize = GroupSize.oneToOne;
-//consent
+  CommunicationPref _commPref = CommunicationPref.both;
+
+  //consent
   bool _recordingConsent = false;
   bool _legalConsent = false;
+
   //tutor
   final _educationController = TextEditingController();
   final _experienceController = TextEditingController();
@@ -58,11 +62,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final List<String> _tutorTeachingLevels = [];
   String? _resumeFileName;
   String? _resumeUrl;
+
   //parents
   final List<TextEditingController> _childEmailControllers = [
-    TextEditingController()
+    TextEditingController(),
   ];
-
 
   Future<void> _pickResumeFile() async {
     try {
@@ -163,6 +167,86 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _selectedDOB = dob;
       _isUnder13 = Validators.checkIsUnder13(dob);
     });
+  }
+
+  void _submitRegistrationForm() {
+    if (!_legalConsent) {
+      setState(() {
+        _stepError = 'You must agree to the Terms of Service & Privacy Policy.';
+      });
+      return;
+    }
+    if (_selectedRole == UserRole.student && !_legalConsent) {
+      setState(() {
+        _stepError =
+            'You must give recording consent to create a student account.';
+      });
+      return;
+    }
+    final reader = ref.read(authViewModalProvider.notifier);
+    final fullName = _nameController.text.trim();
+    final email = _emailContoller.text.trim();
+    final password = _passwordController.text;
+
+    switch (_selectedRole!) {
+      case UserRole.parent:
+        reader.registerParent(
+          fullName: fullName,
+          email: email,
+          password: password,
+          childrenEmails: _childEmailControllers
+              .map((e) => e.text.trim())
+              .where((e) => e.isNotEmpty)
+              .toList(),
+        );
+        break;
+      case UserRole.tutor:
+        reader.registerTutor(
+          fullName: fullName,
+          email: email,
+          password: password,
+          education: _educationController.text.trim(),
+          teachingExperience: _experienceController.text.trim(),
+          subjects: _tutorSubjectSlugs,
+          teachingLevels: _tutorTeachingLevels,
+          cvLink: _resumeUrl ?? 'https://example.com/tutor_cv.pdf',
+        );
+        break;
+      case UserRole.student:
+        AgeGroup ageGroup = AgeGroup.gcse;
+        switch (_selectedStage) {
+          case SubjectStage.primary:
+            ageGroup = AgeGroup.primary;
+            break;
+          case SubjectStage.elevenPlus:
+            ageGroup = AgeGroup.elevenPlus;
+            break;
+          case SubjectStage.gcse:
+            ageGroup = AgeGroup.gcse;
+            break;
+          case SubjectStage.aLevel:
+            ageGroup = AgeGroup.aLevel;
+            break;
+          case SubjectStage.btec:
+            ageGroup = AgeGroup.btec;
+            break;
+        }
+        reader.registerStudent(
+          fullName: fullName,
+          email: email,
+          password: password,
+          ageGroup: ageGroup,
+          subjects: _selectedSubjects,
+          preferredGroupSize: _selectedGroupSize,
+          communicationPref: _commPref,
+          isUnder13: _isUnder13,
+          parentEmail: _isUnder13 ? _parentEmailController.text.trim() : null,
+        );
+        break;
+      case UserRole.admin:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+    }
   }
 
   @override
@@ -430,6 +514,134 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ],
                   ),
                 ],
+                if (_currentStep == 3) ...[
+                  Text('Confirm & Create Account', style: AppTextStyles.h2),
+                  const SizedBox(height: 16),
+
+                  // Summary Card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceCard,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusL,
+                      ),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Account Summary', style: AppTextStyles.h4),
+                        const Divider(),
+                        Text(
+                          'Role: ${_selectedRole?.displayName}',
+                          style: AppTextStyles.bodyMedium,
+                        ),
+                        Text(
+                          'Name: ${_nameController.text}',
+                          style: AppTextStyles.bodyMedium,
+                        ),
+                        Text(
+                          'Email: ${_emailContoller.text}',
+                          style: AppTextStyles.bodyMedium,
+                        ),
+                        if (_selectedRole == UserRole.student) ...[
+                          Text(
+                            'Stage: ${_selectedStage.displayName}',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                          Text(
+                            'Subjects: ${_selectedSubjects.join(", ")}',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                        ],
+                        if (_selectedRole == UserRole.parent) ...[
+                          Text(
+                            'Children Linked: ${_childEmailControllers.where((e) => e.text.isNotEmpty).length}',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                        ],
+                        if (_selectedRole == UserRole.tutor) ...[
+                          Text(
+                            'Subjects: ${_tutorSubjectSlugs.join(", ")}',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Checkbox(
+                        value: _legalConsent,
+                        onChanged: (val) =>
+                            setState(() => _legalConsent = val ?? false),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: GestureDetector(
+                            onTap: () {},
+                            child: Text(
+                              'I agree to the Terms of Service and Privacy Policy.',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                decoration: TextDecoration.underline,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  if (_selectedRole == UserRole.student) ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Checkbox(
+                          value: _recordingConsent,
+                          onChanged: (val) =>
+                              setState(() => _recordingConsent = val ?? false),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              AppStrings.recordingConsent,
+                              style: AppTextStyles.bodySmall,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomButton(
+                          label: 'Back',
+                          variant: ButtonVariant.outline,
+                          onPressed: () {
+                            setState(() {
+                              _currentStep = 2;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: CustomButton(
+                          label: AppStrings.createAccount,
+                          onPressed: _submitRegistrationForm,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ],
           ),
@@ -494,8 +706,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         Text('Link Your Children', style: AppTextStyles.h2),
         const SizedBox(height: 8),
         Text(
-            'Enter the email addresses your children used to register. They will be linked to your dashboard automatically.',
-            style: AppTextStyles.bodyMedium),
+          'Enter the email addresses your children used to register. They will be linked to your dashboard automatically.',
+          style: AppTextStyles.bodyMedium,
+        ),
         const SizedBox(height: 24),
         ...List.generate(_childEmailControllers.length, (index) {
           return Padding(
@@ -600,6 +813,45 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   borderRadius: BorderRadius.circular(AppDimensions.radiusM),
                 ),
                 child: Center(child: Text(title, style: AppTextStyles.h4)),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+        Text('Communication Preference', style: AppTextStyles.labelLarge),
+        Row(
+          children: CommunicationPref.values.map((e) {
+            final isSel = _commPref == e;
+            String title = e == CommunicationPref.both
+                ? 'both'
+                : CommunicationPref.parentOnly == e
+                ? 'Parent only'
+                : 'student only';
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _commPref = e;
+                  });
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSel
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.surfaceCard,
+                    border: Border.all(
+                      color: isSel ? AppColors.primary : AppColors.border,
+                      width: isSel ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                  child: Center(child: Text(title, style: AppTextStyles.h4)),
+                ),
               ),
             );
           }).toList(),

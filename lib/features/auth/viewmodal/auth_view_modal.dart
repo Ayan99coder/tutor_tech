@@ -67,4 +67,51 @@ class AuthViewModal extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
+  Future<void> registerParent({
+    required String fullName,
+    required String email,
+    required String password,
+    required List<String> childrenEmails,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final user = await _authRepository.registerParents(
+        fullName: fullName,
+        email: email,
+        password: password,
+        childrenEmails: childrenEmails,
+      );
+      state = state.copyWith(isLoading: false, isAuthenticated: true, currentUser: user);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+  Future<void> registerTutor({
+    required String fullName,
+    required String email,
+    required String password,
+    required String education,
+    required String teachingExperience,
+    required List<String> subjects,
+    required List<String> teachingLevels,
+    String? cvLink,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final user = await _authRepository.registerTutors(
+        fullName: fullName,
+        email: email,
+        password: password,
+        education: education,
+        teachingExperience: teachingExperience,
+        subjects: subjects,
+        teachingLevels: teachingLevels,
+        cvLink: cvLink,
+      );
+      state = state.copyWith(isLoading: false, isAuthenticated: true, currentUser: user);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
 }
