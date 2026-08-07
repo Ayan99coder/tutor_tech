@@ -33,4 +33,5 @@ abstract class AuthRepository {
     String? cvLink,
   });
   Future<UserModel?> getCurrentUser();
+  Future<UserModel> signInWithEmail(String email, String password);
 }

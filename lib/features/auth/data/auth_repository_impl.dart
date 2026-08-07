@@ -12,6 +12,20 @@ class AuthRepositoryImpl extends AuthRepository {
   final FirebaseFirestore _firestore;
 
   AuthRepositoryImpl(this._auth, this._firestore);
+  @override
+  Future<UserModel> signInWithEmail(String email, String password) async {
+    final cred = await _auth.signInWithEmailAndPassword(email: email, password: password);
+    if (cred.user == null) {
+      throw Exception("Sign in failed");
+    }
+
+    final doc = await _firestore.collection('users').doc(cred.user!.uid).get();
+    if (doc.exists && doc.data() != null) {
+      return UserModel.fromJson(doc.data()!);
+    } else {
+      throw Exception("User profile not found");
+    }
+  }
 
   @override
   Future<UserModel> registerStudent({

@@ -7,6 +7,24 @@ class AuthViewModal extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
 
   AuthViewModal(this._authRepository) : super(const AuthState());
+  Future<void> login(String email, String password) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final user = await _authRepository.signInWithEmail(email, password);
+
+      state = state.copyWith(
+        isLoading: false,
+        isAuthenticated: true,
+        currentUser: user,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        isAuthenticated: false,
+        errorMessage: 'Invalid email or password',
+      );
+    }
+  }
 
   Future<void> checkAuthState() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
