@@ -18,9 +18,20 @@ class TutorDashboardViewmodal
     return const TutorDashboardState();
   }
 
-  Future<TutorModel?> loadProfile() async {
-    state = state.copyWith(errorMessage: null, isLoading: true);
-    final tutor =await tutorRepo.getTutorById(tutorIds);
-
+  Future<void> loadProfile() async {
+    try {
+      state = state.copyWith(isLoading: true, clearError: true);
+      final tutor = await tutorRepo.getTutorById(tutorIds);
+      final assignedStd = await tutorRepo.getAssignedStudentsBasicInfo(
+        tutorIds,
+      );
+      state = state.copyWith(
+        isLoading: false,
+        assignedStudents: assignedStd,
+        tutor: tutor,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
   }
 }

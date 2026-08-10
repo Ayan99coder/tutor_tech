@@ -20,6 +20,15 @@ class TutorDashboardScreen extends ConsumerStatefulWidget {
 
 class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
   @override
+  void initState() {
+    super.initState();
+    final currentTutor = ref.watch(authViewModalProvider).currentUser;
+    if (currentTutor != null) {
+      ref.read(tutorDashboardProvider(currentTutor.id).notifier).loadProfile();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final currentTutor = ref.watch(authViewModalProvider).currentUser;
     final currentUser = currentTutor!.fullName.isNotEmpty
@@ -81,49 +90,86 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                               child: CustomButton(
                                 label: 'Manage Groups 👥',
                                 variant: ButtonVariant.secondary,
-                                onPressed: () {
-
-                                },
+                                onPressed: () {},
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 24),
 
-                        if(pendingReport.isNotEmpty)...[ Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                            border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.access_time_filled, color: AppColors.warning)
-                                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                                  .shimmer(duration: const Duration(milliseconds: 1200), color: Colors.white)
-                                  .scale(end: const Offset(1.1, 1.1), duration: const Duration(milliseconds: 1200)),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'You have ${pendingReport.length} pending report(s) to submit.',
-                                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                        if (pendingReport.isNotEmpty) ...[
+                          Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warning.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppDimensions.radiusM,
+                                  ),
+                                  border: Border.all(
+                                    color: AppColors.warning.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                          Icons.access_time_filled,
+                                          color: AppColors.warning,
+                                        )
+                                        .animate(
+                                          onPlay: (c) =>
+                                              c.repeat(reverse: true),
+                                        )
+                                        .shimmer(
+                                          duration: const Duration(
+                                            milliseconds: 1200,
+                                          ),
+                                          color: Colors.white,
+                                        )
+                                        .scale(
+                                          end: const Offset(1.1, 1.1),
+                                          duration: const Duration(
+                                            milliseconds: 1200,
+                                          ),
+                                        ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'You have ${pendingReport.length} pending report(s) to submit.',
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                              color: AppColors.textPrimary,
+                                            ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => null,
+                                      child: const Text('Review Now'),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              .animate()
+                              .slideY(
+                                begin: -0.2,
+                                end: 0,
+                                duration: const Duration(milliseconds: 400),
+                                curve: Curves.easeOutCubic,
+                              )
+                              .fade(
+                                duration: const Duration(milliseconds: 400),
                               ),
-                              TextButton(
-                                onPressed: () => null,
-                                child: const Text('Review Now'),
-                              ),
-                            ],
-                          ),
-                        ).animate().slideY(begin: -0.2, end: 0, duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic)
-                            .fade(duration: const Duration(milliseconds: 400)),
                           const SizedBox(height: 24),
                         ],
                         Text("Today's Sessions", style: AppTextStyles.h3),
                         const SizedBox(height: 12),
-
                       ],
                     ),
                   ),
