@@ -1,8 +1,10 @@
 import 'package:tutor_tech/features/parent/model/parent_model.dart';
 import 'package:tutor_tech/features/student/model/student_model.dart';
+import 'package:tutor_tech/features/tutor/model/tutor_model.dart';
 
 abstract class TutorRepository {
-
+Future<TutorModel?> getTutorById(String id);
+Future<List<Map<String, String>>> getAssignedStudentsBasicInfo(String tutorId);
 }
 class StudentWithParent {
   final StudentModel student;

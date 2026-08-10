@@ -39,7 +39,7 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
   List<DropdownMenuItem<String>> _availableTutorItems = [];
   final Map<String, String> _tutorNameMap = {};
   bool _isLoadingData = true;
-void _updateFiltered(){
+void _updateFiltered(String value){
 
 }
   @override
@@ -70,6 +70,7 @@ void _updateFiltered(){
                   if (val != null) {
                     setState(() {
                       _selectedSubject = val;
+                      _updateFiltered(val);
                     });
                   }
                 },
