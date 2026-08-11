@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:tutor_tech/features/tutor/model/tutor_model.dart';
 import 'package:tutor_tech/features/tutor/viewmodal/tutor_dashboard_state.dart';
 
 import '../model/tutor_repository.dart';
