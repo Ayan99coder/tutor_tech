@@ -5,10 +5,11 @@ import 'package:tutor_tech/features/tutor/model/tutor_repository.dart';
 import 'package:tutor_tech/features/tutor/viewmodal/tutor_dashboard_state.dart';
 import 'package:tutor_tech/features/tutor/viewmodal/tutor_dashboard_viewmodal.dart';
 
-final tutorDashboardProvider = NotifierProvider.autoDispose
+final tutorDashboardProvider = NotifierProvider
     .family<TutorDashboardViewmodal, TutorDashboardState, String>(
       TutorDashboardViewmodal.new,
     );
 final tutorRepoProvider = Provider<TutorRepository>((ref) {
   return TutorRepositoryImpl(ref.read(firebaseFirestoreProvider));
 });
+

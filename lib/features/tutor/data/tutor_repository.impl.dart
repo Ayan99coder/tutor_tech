@@ -15,32 +15,39 @@ class TutorRepositoryImpl implements TutorRepository {
     return null;
   }
 
-  Future<List<Map<String, String>>> getAssignedStudentsBasicInfo(
-    String tutorId,
-  ) async {
-    final List<Map<String, String>> assignedStudent = [];
-    final students = await _firestore
-        .collection('student')
-        .where('assigned_tutor_id', isEqualTo: tutorId)
-        .get();
-    for (var i in students.docs) {
-      final data = i.data();
-      final name =
-          data['fullName'] as String? ??
-          data['full_name'] as String? ??
-          'Student';
-      final subjects =
-          (data['selectedSubjects'] as List?)?.join(', ').toUpperCase() ??
-          'GCSE';
-      final userId =
-          data['userId'] as String? ?? data['user_id'] as String? ?? '';
-      assignedStudent.add({
-        'id': i.id,
-        'user_id': userId,
-        'name': name,
-        'subject': subjects,
-      });
-    }
-    return assignedStudent;
+  @override
+  @override
+  Stream<List<Map<String, String>>> watchAssignedStudents(String tutorId) {
+
+    return _firestore
+        .collection('students')
+        .where('tutorId', isEqualTo: tutorId)
+        .snapshots()
+        .map((snapshot) {
+          final List<Map<String, String>> assignedStudents = [];
+
+          for (final doc in snapshot.docs) {
+            final data = doc.data();
+
+            final name =
+                data['fullName']?.toString() ??
+                data['full_name']?.toString() ??
+                'Student';
+
+            final email = data['email']?.toString() ?? '';
+
+            final userId =
+                data['userId']?.toString() ?? data['user_id']?.toString() ?? '';
+
+            assignedStudents.add({
+              'id': doc.id,
+              'user_id': userId,
+              'name': name,
+              'email': email,
+            });
+          }
+
+          return assignedStudents;
+        });
   }
 }

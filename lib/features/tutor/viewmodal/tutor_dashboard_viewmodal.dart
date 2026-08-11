@@ -7,7 +7,7 @@ import '../model/tutor_repository.dart';
 import '../provider/tutor_dashboardScreen_provider.dart';
 
 class TutorDashboardViewmodal
-    extends AutoDisposeFamilyNotifier<TutorDashboardState, String> {
+    extends FamilyNotifier<TutorDashboardState, String> {
   late final TutorRepository tutorRepo;
   late String tutorIds;
 
@@ -19,17 +19,29 @@ class TutorDashboardViewmodal
   }
 
   Future<void> loadProfile() async {
+    // Already loaded → Firebase request nahi
+    if (state.tutor != null) {
+      return;
+    }
+
     try {
       state = state.copyWith(isLoading: true, clearError: true);
+
       final tutor = await tutorRepo.getTutorById(tutorIds);
-      final assignedStd = await tutorRepo.getAssignedStudentsBasicInfo(
-        tutorIds,
-      );
-      state = state.copyWith(
-        isLoading: false,
-        assignedStudents: assignedStd,
-        tutor: tutor,
-      );
+
+      state = state.copyWith(isLoading: false, tutor: tutor);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+  Future<void> refreshProfile() async {
+    try {
+      state = state.copyWith(isLoading: true, clearError: true);
+
+      final tutor = await tutorRepo.getTutorById(tutorIds);
+
+      state = state.copyWith(isLoading: false, tutor: tutor);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
