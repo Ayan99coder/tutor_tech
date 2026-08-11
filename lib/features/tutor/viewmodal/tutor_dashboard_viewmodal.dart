@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutor_tech/features/tutor/viewmodal/tutor_dashboard_state.dart';
 
@@ -7,12 +9,17 @@ import '../provider/tutor_dashboardScreen_provider.dart';
 class TutorDashboardViewmodal
     extends FamilyNotifier<TutorDashboardState, String> {
   late final TutorRepository tutorRepo;
-  late String tutorIds;
-
+  late final String tutorIds;
+  StreamSubscription<List<Map<String, String>>>?
+  _studentsSubscription;
   @override
   TutorDashboardState build(String tutorId) {
     tutorIds = tutorId;
     tutorRepo = ref.read(tutorRepoProvider);
+    watchAssignedStudents();
+    ref.onDispose(() {
+      _studentsSubscription?.cancel();
+    });
     return const TutorDashboardState();
   }
 
@@ -32,16 +39,21 @@ class TutorDashboardViewmodal
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
+  void watchAssignedStudents() {
+    _studentsSubscription?.cancel();
 
-  Future<void> refreshProfile() async {
-    try {
-      state = state.copyWith(isLoading: true, clearError: true);
-
-      final tutor = await tutorRepo.getTutorById(tutorIds);
-
-      state = state.copyWith(isLoading: false, tutor: tutor);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
-    }
+    _studentsSubscription =
+        tutorRepo.watchAssignedStudents(tutorIds).listen(
+              (students) {
+            state = state.copyWith(
+              assignedStudents: students,
+            );
+          },
+          onError: (error) {
+            state = state.copyWith(
+              errorMessage: error.toString(),
+            );
+          },
+        );
   }
 }

@@ -22,7 +22,7 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    final currentTutor = ref.watch(authViewModalProvider).currentUser;
+    final currentTutor = ref.read(authViewModalProvider).currentUser;
     if (currentTutor != null) {
       ref.read(tutorDashboardProvider(currentTutor.id).notifier).loadProfile();
     }
