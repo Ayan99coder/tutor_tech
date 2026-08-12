@@ -12,7 +12,7 @@ final studentRepoProvider = Provider<StudentRepository>((ref) {
   return StudentRepositoryImpl(ref.read(firebaseFirestoreProvider));
 });
 final studentProvider =
-    NotifierProviderFamily<
+    NotifierProvider.family<
       StudentDashboardNotifier,
       StudentDashboardState,
       String
