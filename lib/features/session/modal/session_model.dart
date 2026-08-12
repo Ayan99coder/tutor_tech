@@ -1,13 +1,9 @@
 import '../../student/model/student_model.dart';
 
-enum SessionStatus {
-  scheduled,
-  inProgress,
-  completed,
-  cancelled,
-  noShow,
-}
+enum SessionStatus { scheduled, inProgress, completed, cancelled, noShow }
+
 enum ClassroomPlatform { zoom, googleClassroom }
+
 class SessionModel {
   final String id;
   final String tutorId;
@@ -31,12 +27,16 @@ class SessionModel {
   // ── Attendance Tracking (F3) ──────────────────────────────────
   /// Whether the tutor conducted / attended this session.
   final bool? tutorAttended;
+
   /// Whether the student joined / attended this session.
   final bool? studentAttended;
+
   /// Reason for no-show (tutor or student).
   final String? noShowReason;
+
   /// Timestamp when the tutor first joined the Zoom session.
   final DateTime? tutorJoinedAt;
+
   /// Timestamp when the session was officially ended / marked complete.
   final DateTime? sessionEndedAt;
 
@@ -102,7 +102,8 @@ class SessionModel {
       durationMinutes: durationMinutes ?? this.durationMinutes,
       zoomLink: zoomLink ?? this.zoomLink,
       zoomConfirmedAt: zoomConfirmedAt ?? this.zoomConfirmedAt,
-      zoomConfirmedByAdminId: zoomConfirmedByAdminId ?? this.zoomConfirmedByAdminId,
+      zoomConfirmedByAdminId:
+          zoomConfirmedByAdminId ?? this.zoomConfirmedByAdminId,
       sessionStatus: sessionStatus ?? this.sessionStatus,
       reportSubmitted: reportSubmitted ?? this.reportSubmitted,
       reportSubmittedAt: reportSubmittedAt ?? this.reportSubmittedAt,
@@ -150,7 +151,8 @@ class SessionModel {
     return SessionModel(
       id: json['id'] as String,
       tutorId: json['tutor_id'] as String? ?? json['tutorId'] as String? ?? '',
-      studentId: json['student_id'] as String? ?? json['studentId'] as String? ?? '',
+      studentId:
+          json['student_id'] as String? ?? json['studentId'] as String? ?? '',
       subject: json['subject'] as String? ?? '',
       level: json['level'] as String? ?? '',
       groupSize: GroupSize.values.firstWhere(
@@ -160,17 +162,27 @@ class SessionModel {
       scheduledAt: json['scheduled_at'] != null
           ? DateTime.parse(json['scheduled_at'] as String)
           : DateTime.now(),
-      durationMinutes: json['duration_minutes'] as int? ?? json['durationMinutes'] as int? ?? 60,
-      zoomLink: json['zoom_link'] as String? ?? json['zoomLink'] as String? ?? '',
+      durationMinutes:
+          json['duration_minutes'] as int? ??
+          json['durationMinutes'] as int? ??
+          60,
+      zoomLink:
+          json['zoom_link'] as String? ?? json['zoomLink'] as String? ?? '',
       zoomConfirmedAt: json['zoom_confirmed_at'] != null
           ? DateTime.parse(json['zoom_confirmed_at'] as String)
           : null,
-      zoomConfirmedByAdminId: json['zoom_confirmed_by_admin_id'] as String? ?? json['zoomConfirmedByAdminId'] as String?,
+      zoomConfirmedByAdminId:
+          json['zoom_confirmed_by_admin_id'] as String? ??
+          json['zoomConfirmedByAdminId'] as String?,
       sessionStatus: SessionStatus.values.firstWhere(
-        (e) => e.name == json['session_status'] || e.name == json['sessionStatus'],
+        (e) =>
+            e.name == json['session_status'] || e.name == json['sessionStatus'],
         orElse: () => SessionStatus.scheduled,
       ),
-      reportSubmitted: json['report_submitted'] as bool? ?? json['reportSubmitted'] as bool? ?? false,
+      reportSubmitted:
+          json['report_submitted'] as bool? ??
+          json['reportSubmitted'] as bool? ??
+          false,
       reportSubmittedAt: json['report_submitted_at'] != null
           ? DateTime.parse(json['report_submitted_at'] as String)
           : null,
@@ -178,7 +190,8 @@ class SessionModel {
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
       tutorName: json['tutor_name'] as String? ?? json['tutorName'] as String?,
-      studentName: json['student_name'] as String? ?? json['studentName'] as String?,
+      studentName:
+          json['student_name'] as String? ?? json['studentName'] as String?,
       notes: json['notes'] as String?,
       tutorAttended: json['tutor_attended'] as bool?,
       studentAttended: json['student_attended'] as bool?,
