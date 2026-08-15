@@ -31,4 +31,14 @@ class StudentGroupNotifier
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
+  Future<void> getGroup()async{
+    try{
+      state = state.copyWith(isLoading: true,clearError: true);
+      final getGroup = await repo.getGroups(ids);
+      state = state.copyWith(isLoading: false,groups:getGroup);
+    }catch(e){
+      state = state.copyWith(isLoading : false,errorMessage: e.toString());
+    }
+  }
 }
+

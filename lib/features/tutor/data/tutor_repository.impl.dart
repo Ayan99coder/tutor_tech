@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tutor_tech/features/tutor/model/tutor_model.dart';
 import 'package:tutor_tech/features/tutor/model/tutor_repository.dart';
 
+import '../../student/model/student_model.dart';
+
 class TutorRepositoryImpl implements TutorRepository {
   FirebaseFirestore _firestore;
 
@@ -16,38 +18,15 @@ class TutorRepositoryImpl implements TutorRepository {
   }
 
   @override
-  @override
-  Stream<List<Map<String, String>>> watchAssignedStudents(String tutorId) {
-
+  Stream<List<StudentModel>> watchAssignedStudents(String tutorId) {
     return _firestore
         .collection('students')
         .where('tutorId', isEqualTo: tutorId)
         .snapshots()
-        .map((snapshot) {
-          final List<Map<String, String>> assignedStudents = [];
-
-          for (final doc in snapshot.docs) {
-            final data = doc.data();
-
-            final name =
-                data['fullName']?.toString() ??
-                data['full_name']?.toString() ??
-                'Student';
-
-            final email = data['email']?.toString() ?? '';
-
-            final userId =
-                data['userId']?.toString() ?? data['user_id']?.toString() ?? '';
-
-            assignedStudents.add({
-              'id': doc.id,
-              'user_id': userId,
-              'name': name,
-              'email': email,
-            });
-          }
-
-          return assignedStudents;
-        });
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => StudentModel.fromJson(doc.data()))
+              .toList(),
+        );
   }
 }

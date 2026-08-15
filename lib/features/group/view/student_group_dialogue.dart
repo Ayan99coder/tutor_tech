@@ -34,27 +34,50 @@ class _StudentGroupDialogueState extends ConsumerState<StudentGroupDialogue> {
 
   String? nameError;
 
-  void saveNewGroup() {
-    if (_nameCtrl.text.isEmpty) {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(studentGroupProvider(widget.tutorId).notifier).getGroup();
+    });
+  }
+
+  Future<void> saveNewGroup() async {
+    if (_nameCtrl.text.trim().isEmpty) {
       setState(() {
         nameError = 'Please enter the Group name';
       });
       return;
     }
+
     final stdId = _selectedStudentIds.toList();
-    final name = stdId.map((id) {
+
+    final names = stdId.map((id) {
       final match = widget.assignedStudents.where((s) => s.id == id);
+
       return match.isNotEmpty ? match.first.fullName : 'Student';
     }).toList();
 
     final newGroup = StudentGroupModel(
       tutorId: widget.tutorId,
-      groupName: _nameCtrl.text,
+      groupName: _nameCtrl.text.trim(),
       studentIds: stdId,
-      studentNames: name,
+      studentNames: names,
       createdAt: DateTime.now(),
     );
-    ref.read(studentGroupProvider(widget.tutorId).notifier).saveGroup(newGroup);
+
+    await ref
+        .read(studentGroupProvider(widget.tutorId).notifier)
+        .saveGroup(newGroup);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isCreating = false;
+      _selectedStudentIds.clear();
+      _nameCtrl.clear();
+      nameError = null;
+    });
   }
 
   @override
@@ -79,7 +102,12 @@ class _StudentGroupDialogueState extends ConsumerState<StudentGroupDialogue> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: Column(children: [_buildHeader()]),
+          child: Column(
+            children: [
+              _buildHeader(),
+              _isCreating ? _createGroupView() : _getGroupView(),
+            ],
+          ),
         ),
       ),
     );
@@ -337,26 +365,227 @@ class _StudentGroupDialogueState extends ConsumerState<StudentGroupDialogue> {
               // Save Group
               Expanded(
                 child: ElevatedButton(
-                  onPressed: _selectedStudentIds.isEmpty ? null : saveNewGroup,
+                  onPressed:
+                      ref
+                              .watch(studentGroupProvider(widget.tutorId))
+                              .isLoading ||
+                          _selectedStudentIds.isEmpty
+                      ? null
+                      : saveNewGroup,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.tutorColor,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                   ),
-                  child: Text(
-                    _selectedStudentIds.isEmpty
-                        ? 'Save Group'
-                        : 'Save Group (${_selectedStudentIds.length})',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child:
+                      ref.watch(studentGroupProvider(widget.tutorId)).isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _selectedStudentIds.isEmpty
+                              ? 'Save Group'
+                              : 'Save Group (${_selectedStudentIds.length})',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildGroupCard(StudentGroupModel group) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: AppColors.tutorColor.withValues(alpha: 0.12),
+                child: const Icon(
+                  Icons.groups_rounded,
+                  color: AppColors.tutorColor,
+                  size: 21,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      group.groupName,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+
+                    const SizedBox(height: 3),
+
+                    Text(
+                      '${group.studentIds.length} students',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              IconButton(
+                onPressed: () {
+                  // edit/delete baad mein
+                },
+                icon: const Icon(Icons.more_vert, color: Colors.black45),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: group.studentNames.map((name) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  name,
+                  style: const TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _getGroupView() {
+    final groupState = ref.watch(studentGroupProvider(widget.tutorId));
+
+    if (groupState.isLoading) {
+      return const Expanded(child: Center(child: CircularProgressIndicator()));
+    }
+
+    if (groupState.errorMessage != null) {
+      return Expanded(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(groupState.errorMessage!, textAlign: TextAlign.center),
+          ),
+        ),
+      );
+    }
+
+    return Expanded(
+      child: Column(
+        children: [
+          Expanded(
+            child: groupState.groups.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.groups_outlined,
+                          size: 50,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No groups created yet.',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Create a group to organise your students.',
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: groupState.groups.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (_, index) {
+                      final group = groupState.groups[index];
+
+                      return _buildGroupCard(group);
+                    },
+                  ),
+          ),
+
+          // Toggle Create / View Groups button
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _isCreating = true;
+                  });
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Create New Group'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.tutorColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'package:tutor_tech/features/student/model/student_model.dart';
+
 import '../../session/modal/session_model.dart';
 import '../model/tutor_model.dart';
 
@@ -7,7 +9,7 @@ class TutorDashboardState {
   final List<SessionModel> todaySessions;
   final List<SessionModel> upcomingSessions;
   final List<SessionModel> pendingReportSessions;
-  final List<Map<String, String>> assignedStudents;
+  final List<StudentModel> assignedStudents;
   final String? errorMessage;
 
   const TutorDashboardState({
@@ -26,7 +28,7 @@ class TutorDashboardState {
     List<SessionModel>? todaySessions,
     List<SessionModel>? upcomingSessions,
     List<SessionModel>? pendingReportSessions,
-    List<Map<String, String>>? assignedStudents,
+    List<StudentModel>? assignedStudents,
     String? errorMessage,
     bool clearError = false,
   }) {
