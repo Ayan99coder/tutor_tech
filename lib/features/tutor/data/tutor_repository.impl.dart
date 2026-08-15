@@ -29,4 +29,10 @@ class TutorRepositoryImpl implements TutorRepository {
               .toList(),
         );
   }
+
+  @override
+  Future<List<TutorModel>> getAllTutors() async {
+    final data = await _firestore.collection('Tutors').get();
+    return data.docs.map((e) => TutorModel.fromJson(e.data())).toList();
+  }
 }

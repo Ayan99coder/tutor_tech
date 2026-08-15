@@ -7,7 +7,7 @@ Future<TutorModel?> getTutorById(String id);
 Stream<List<StudentModel>> watchAssignedStudents(
     String tutorId,
     );
-
+Future<List<TutorModel>> getAllTutors();
 }
 class StudentWithParent {
   final StudentModel student;

@@ -7,7 +7,7 @@ import 'package:tutor_tech/features/tutor/viewmodal/tutor_dashboard_state.dart';
 import '../model/tutor_repository.dart';
 import '../provider/tutor_dashboardScreen_provider.dart';
 
-class TutorDashboardViewmodal
+class TutorDashboardViewModal
     extends FamilyNotifier<TutorDashboardState, String> {
   late final TutorRepository tutorRepo;
   late final String tutorIds;
@@ -25,7 +25,6 @@ class TutorDashboardViewmodal
   }
 
   Future<void> loadProfile() async {
-    // Already loaded → Firebase request nahi
     if (state.tutor != null) {
       return;
     }
