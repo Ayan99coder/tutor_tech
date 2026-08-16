@@ -13,4 +13,15 @@ class StudentRepositoryImpl implements StudentRepository{
     }
     return null;
   }
+  @override
+  Future<List<StudentModel>> getAllStudents() async {
+    final snapshot = await _firestore
+        .collection('students')
+
+        .get();
+
+    return snapshot.docs
+        .map((doc) => StudentModel.fromJson(doc.data()))
+        .toList();
+  }
 }
