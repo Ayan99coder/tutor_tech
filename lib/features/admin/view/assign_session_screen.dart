@@ -25,12 +25,13 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
   final _notesController = TextEditingController();
   String? _selectedTutorId;
   String _selectedSubject = 'gcse_maths';
-  int _audienceScope = 0;
+  AudienceType _audienceType = AudienceType.public;
   final List<String> _selectedStudentsIds = [];
   final List<String> _selectedGroupIds = [];
   ClassroomPlatform _platform = ClassroomPlatform.googleClassroom;
   DateTime _scheduledDate = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _scheduledTime = const TimeOfDay(hour: 16, minute: 0);
+
   @override
   Widget build(BuildContext context) {
     final adminState = ref.watch(adminProvider);
@@ -98,7 +99,7 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
                   _selectedTutorId = value;
                   _selectedStudentsIds.clear();
                   _selectedGroupIds.clear();
-                  _audienceScope = 0;
+                  _audienceType = AudienceType.public;
                 });
 
                 ref.read(adminProvider.notifier).loadAllFilteredStudent(value);
@@ -110,22 +111,31 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
 
             // AUDIENCE TARGETING SELECTOR
             Text('Target Audience Scope', style: AppTextStyles.labelLarge),
-            SegmentedButton<int>(
+            SegmentedButton<AudienceType>(
               segments: const [
-                ButtonSegment(value: 0, label: Text('Public 🌐')),
-                ButtonSegment(value: 1, label: Text('Specific Student 👤')),
-                ButtonSegment(value: 2, label: Text('Student Group 👥')),
+                ButtonSegment(
+                  value: AudienceType.public,
+                  label: Text('Public 🌐'),
+                ),
+                ButtonSegment(
+                  value: AudienceType.specific,
+                  label: Text('Specific Student 👤'),
+                ),
+                ButtonSegment(
+                  value: AudienceType.groups,
+                  label: Text('Student Group 👥'),
+                ),
               ],
-              selected: {_audienceScope},
+              selected: {_audienceType},
               onSelectionChanged: (val) =>
-                  setState(() => _audienceScope = val.first),
+                  setState(() => _audienceType = val.first),
             ),
             const SizedBox(height: 12),
-            if (_audienceScope == 0) ...[
+            if (_audienceType == AudienceType.public) ...[
               Text('All Students:', style: AppTextStyles.bodyMedium),
               const SizedBox(height: 6),
             ],
-            if (_audienceScope == 1) ...[
+            if (_audienceType == AudienceType.specific) ...[
               Text('Select Target Students:', style: AppTextStyles.bodyMedium),
               const SizedBox(height: 6),
               Wrap(
@@ -147,7 +157,7 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
                 }).toList(),
               ),
             ],
-            if (_audienceScope == 2 && groupState != null) ...[
+            if (_audienceType == AudienceType.groups && groupState != null) ...[
               if (groupState.isLoading)
                 const CircularProgressIndicator()
               else
@@ -206,7 +216,7 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
             ),
             const SizedBox(height: 12),
             CustomTextField(
-              label: _platform == ClassroomPlatform.googleClassroom
+              label: _platform == ClassroomPlatform.zoom
                   ? 'Zoom Meeting Link *'
                   : 'Google Classroom Link *',
               controller: _zoomMeetingController,
@@ -221,24 +231,34 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
                       Text('Date', style: AppTextStyles.labelLarge),
                       const SizedBox(height: 6),
                       InkWell(
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
                         onTap: () async {
                           final picked = await showDatePicker(
                             context: context,
                             initialDate: _scheduledDate,
                             firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(const Duration(days: 90)),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 90),
+                            ),
                           );
-                          if (picked != null) setState(() => _scheduledDate = picked);
+                          if (picked != null)
+                            setState(() => _scheduledDate = picked);
                         },
                         child: Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceCard,
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusM,
+                            ),
                             border: Border.all(color: AppColors.border),
                           ),
-                          child: Text(DateFormat('dd MMM yyyy').format(_scheduledDate), style: AppTextStyles.bodyMedium),
+                          child: Text(
+                            DateFormat('dd MMM yyyy').format(_scheduledDate),
+                            style: AppTextStyles.bodyMedium,
+                          ),
                         ),
                       ),
                     ],
@@ -252,22 +272,30 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
                       Text('Time', style: AppTextStyles.labelLarge),
                       const SizedBox(height: 6),
                       InkWell(
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
                         onTap: () async {
                           final picked = await showTimePicker(
                             context: context,
                             initialTime: _scheduledTime,
                           );
-                          if (picked != null) setState(() => _scheduledTime = picked);
+                          if (picked != null)
+                            setState(() => _scheduledTime = picked);
                         },
                         child: Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceCard,
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusM,
+                            ),
                             border: Border.all(color: AppColors.border),
                           ),
-                          child: Text(_scheduledTime.format(context), style: AppTextStyles.bodyMedium),
+                          child: Text(
+                            _scheduledTime.format(context),
+                            style: AppTextStyles.bodyMedium,
+                          ),
                         ),
                       ),
                     ],

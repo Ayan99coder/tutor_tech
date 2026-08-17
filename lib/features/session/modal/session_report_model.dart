@@ -20,8 +20,7 @@ class SessionReportModel {
   final bool viewedByStudent;
   final bool viewedByParent;
 
-  // ── UK-Standard Reporting Fields (F6) ──────────────────────────
-  /// Did the student complete homework from the previous session?
+
   final bool? homeworkCompletedFromPrevious;
   /// Specific academic areas requiring further development.
   final String? areasForImprovement;
