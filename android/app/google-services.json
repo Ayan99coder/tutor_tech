@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "131825491827",
+    "project_id": "tutortech-4542c",
+    "storage_bucket": "tutortech-4542c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:131825491827:android:3b7ce1696957c3e6586f06",
+        "android_client_info": {
+          "package_name": "com.example.tutor_tech"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAW9unXHjZEzhfQybTEhU076fzYU14_3cg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
