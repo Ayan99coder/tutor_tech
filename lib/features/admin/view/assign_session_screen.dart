@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:tutor_tech/core/widgets/custom_textfield.dart';
 import 'package:tutor_tech/features/admin/provider/admin_provider.dart';
 import 'package:tutor_tech/features/group/provider/provider.dart';
+import 'package:tutor_tech/features/session/modal/session_model.dart';
 import 'package:tutor_tech/features/subjects/subject_model.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
 
 class AssignSessionScreen extends ConsumerStatefulWidget {
@@ -17,12 +21,16 @@ class AssignSessionScreen extends ConsumerStatefulWidget {
 
 class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
   final _titleController = TextEditingController();
+  final _zoomMeetingController = TextEditingController();
+  final _notesController = TextEditingController();
   String? _selectedTutorId;
   String _selectedSubject = 'gcse_maths';
   int _audienceScope = 0;
   final List<String> _selectedStudentsIds = [];
   final List<String> _selectedGroupIds = [];
-
+  ClassroomPlatform _platform = ClassroomPlatform.googleClassroom;
+  DateTime _scheduledDate = DateTime.now().add(const Duration(days: 1));
+  TimeOfDay _scheduledTime = const TimeOfDay(hour: 16, minute: 0);
   @override
   Widget build(BuildContext context) {
     final adminState = ref.watch(adminProvider);
@@ -91,7 +99,6 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
                   _selectedStudentsIds.clear();
                   _selectedGroupIds.clear();
                   _audienceScope = 0;
-                  _selectedTutorId = null;
                 });
 
                 ref.read(adminProvider.notifier).loadAllFilteredStudent(value);
@@ -164,7 +171,120 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
                     );
                   }).toList(),
                 ),
+              const SizedBox(height: 16),
             ],
+            Row(
+              children: [
+                Expanded(
+                  child: ChoiceChip(
+                    avatar: const Icon(Icons.video_call, size: 18),
+                    label: const Text('Zoom Meeting'),
+                    selected: _platform == ClassroomPlatform.zoom,
+                    onSelected: (sel) {
+                      if (sel) {
+                        setState(() => _platform = ClassroomPlatform.zoom);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ChoiceChip(
+                    avatar: const Icon(Icons.school, size: 18),
+                    label: const Text('Google Classroom'),
+                    selected: _platform == ClassroomPlatform.googleClassroom,
+                    onSelected: (sel) {
+                      if (sel) {
+                        setState(
+                          () => _platform = ClassroomPlatform.googleClassroom,
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            CustomTextField(
+              label: _platform == ClassroomPlatform.googleClassroom
+                  ? 'Zoom Meeting Link *'
+                  : 'Google Classroom Link *',
+              controller: _zoomMeetingController,
+              prefixIcon: Icons.link,
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Date', style: AppTextStyles.labelLarge),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _scheduledDate,
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 90)),
+                          );
+                          if (picked != null) setState(() => _scheduledDate = picked);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceCard,
+                            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(DateFormat('dd MMM yyyy').format(_scheduledDate), style: AppTextStyles.bodyMedium),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Time', style: AppTextStyles.labelLarge),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                        onTap: () async {
+                          final picked = await showTimePicker(
+                            context: context,
+                            initialTime: _scheduledTime,
+                          );
+                          if (picked != null) setState(() => _scheduledTime = picked);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceCard,
+                            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(_scheduledTime.format(context), style: AppTextStyles.bodyMedium),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const SizedBox(height: 16),
+
+            // Notes Input
+            CustomTextField(
+              label: 'Internal Admin Instructions (Optional)',
+              controller: _notesController,
+              maxLines: 2,
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

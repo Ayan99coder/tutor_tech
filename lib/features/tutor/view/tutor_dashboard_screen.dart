@@ -82,7 +82,7 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                               child: CustomButton(
                                 label: 'Upload Resource 📚',
                                 variant: ButtonVariant.primary,
-                                onPressed: () => null,
+                                onPressed: () {},
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -150,7 +150,7 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                                       ),
                                     ),
                                     TextButton(
-                                      onPressed: () => null,
+                                      onPressed: () {},
                                       child: const Text('Review Now'),
                                     ),
                                   ],

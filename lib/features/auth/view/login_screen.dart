@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tutor_tech/core/router/app_router.dart';
 import 'package:tutor_tech/core/widgets/loading_overlay.dart';
 import 'package:tutor_tech/features/auth/provider/auth_provider.dart';
 
@@ -160,7 +162,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // Sign In Button
                         CustomButton(
                           label: AppStrings.signInButton,
-                          onPressed: null,
+                          onPressed: _handleLogin,
                           isLoading: watcher.isLoading,
                         ),
 
@@ -180,7 +182,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: Column(
                             children: [
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () => context.push(AppRoutes.register),
                                 child: Text(
                                   AppStrings.newStudentRegister,
                                   style: AppTextStyles.bodyMedium.copyWith(
@@ -191,7 +193,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               const SizedBox(height: 4),
                               TextButton(
-                                onPressed: null,
+                                onPressed: () => context.push(AppRoutes.register),
                                 child: Text(
                                   AppStrings.applyToTeach,
                                   style: AppTextStyles.bodySmall.copyWith(

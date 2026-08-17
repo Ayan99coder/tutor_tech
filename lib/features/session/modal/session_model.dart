@@ -5,7 +5,7 @@ enum SessionStatus {
   cancelled,
   noShow,
 }
-
+enum ClassroomPlatform { zoom, googleClassroom }
 class SessionModel {
   final String id;
   final String tutorId;

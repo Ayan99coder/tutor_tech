@@ -132,4 +132,14 @@ class AuthViewModal extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
+
+  Future<void> logout() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      await _authRepository.signOut();
+      state = const AuthState();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
 }

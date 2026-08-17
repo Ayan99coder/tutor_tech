@@ -18,6 +18,7 @@ class StudentDashboardScreen extends ConsumerStatefulWidget {
 
 class _StudentDashboardScreenState
     extends ConsumerState<StudentDashboardScreen> {
+  @override
   void initState() {
     super.initState();
     final currentUser = ref.read(authViewModalProvider).currentUser;

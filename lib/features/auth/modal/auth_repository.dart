@@ -34,4 +34,5 @@ abstract class AuthRepository {
   });
   Future<UserModel?> getCurrentUser();
   Future<UserModel> signInWithEmail(String email, String password);
+  Future<void> signOut();
 }

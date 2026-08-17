@@ -14,3 +14,5 @@ final authRepoProvider = Provider((ref) {
 final authViewModalProvider = StateNotifierProvider<AuthViewModal, AuthState>((ref) {
   return AuthViewModal(ref.read(authRepoProvider));
 });
+
+final authViewModelProvider = authViewModalProvider;

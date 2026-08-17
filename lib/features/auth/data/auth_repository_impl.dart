@@ -188,4 +188,9 @@ class AuthRepositoryImpl extends AuthRepository {
     }
     return null;
   }
+
+  @override
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
 }
