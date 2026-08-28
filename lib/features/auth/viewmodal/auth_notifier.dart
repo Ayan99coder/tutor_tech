@@ -7,11 +7,11 @@ import 'package:tutor_tech/features/auth/viewmodal/auth_state.dart';
 
 import '../repository/auth_repository.dart';
 
-class AuthNotifier extends AsyncNotifier<AuthState> {
+class AuthNotifier extends Notifier<AuthState> {
   late AuthRepository repo;
 
   @override
-  FutureOr<AuthState> build() {
+   build() {
     repo = ref.read(authRepoProvider);
     return AuthState();
   }

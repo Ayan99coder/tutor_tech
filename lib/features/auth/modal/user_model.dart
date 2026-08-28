@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
-enum UserRole {
-  admin,
-  tutor,
-  student,
-  parent,
-}
+enum UserRole { tutor, student, parent }
 
-  extension UserRoleExtension on UserRole {
-    String get displayName {
-      switch (this) {
-        case UserRole.admin:
-          return 'Admin';
-        case UserRole.tutor:
-          return 'Tutor';
-        case UserRole.student:
-          return 'Student';
-        case UserRole.parent:
-          return 'Parent';
-      }
+extension UserRoleExtension on UserRole {
+  String get displayName {
+    switch (this) {
+      case UserRole.tutor:
+        return 'Tutor';
+      case UserRole.student:
+        return 'Student';
+      case UserRole.parent:
+        return 'Parent';
     }
+  }
+
+  String get subtitle {
+    switch (this) {
+      case UserRole.tutor:
+        return 'I want to find tutors and attend sessions.';
+      case UserRole.student:
+        return 'I want to manage and pay for my child\'s tutoring.';
+      case UserRole.parent:
+        return 'I want to teach students and manage my schedule.';
+    }
+  }
 
   Color get color {
     switch (this) {
-      case UserRole.admin:
-        return AppColors.adminColor;
       case UserRole.tutor:
         return AppColors.tutorColor;
       case UserRole.student:
@@ -101,15 +103,20 @@ class UserModel {
     return UserModel(
       id: json['id'] as String,
       email: json['email'] as String,
-      fullName: json['full_name'] as String? ?? json['fullName'] as String? ?? '',
+      fullName:
+          json['full_name'] as String? ?? json['fullName'] as String? ?? '',
       role: UserRole.values.firstWhere(
         (r) => r.name == json['role'],
         orElse: () => UserRole.student,
       ),
-      profileImageUrl: json['profile_image_url'] as String? ?? json['profileImageUrl'] as String?,
-      phoneNumber: json['phone_number'] as String? ?? json['phoneNumber'] as String?,
+      profileImageUrl:
+          json['profile_image_url'] as String? ??
+          json['profileImageUrl'] as String?,
+      phoneNumber:
+          json['phone_number'] as String? ?? json['phoneNumber'] as String?,
       isActive: json['is_active'] as bool? ?? json['isActive'] as bool? ?? true,
-      isOnline: json['is_online'] as bool? ?? json['isOnline'] as bool? ?? false,
+      isOnline:
+          json['is_online'] as bool? ?? json['isOnline'] as bool? ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
