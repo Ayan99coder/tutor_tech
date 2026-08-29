@@ -14,24 +14,57 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._firebaseFirestore, this._firebaseAuth);
 
   @override
-  Future<UserModel> signInWithEmail(String email, String password) async {
+  @override
+  Future<UserModel> signInWithEmail(
+      String email,
+      String password,
+      ) async {
     final cred = await _firebaseAuth.signInWithEmailAndPassword(
-      email: email,
+      email: email.trim(),
       password: password,
     );
-    if (cred.user == null) {
-      throw Exception("Sign in failed");
+
+    final firebaseUser = cred.user;
+
+    if (firebaseUser == null) {
+      throw Exception('Sign in failed.');
     }
 
+    // Refresh Firebase User
+    await firebaseUser.reload();
+
+    final refreshedUser = _firebaseAuth.currentUser;
+
+    if (refreshedUser == null) {
+      throw Exception('Sign in failed.');
+    }
+
+    // Email verification check
+    if (!refreshedUser.emailVerified) {
+      await _firebaseAuth.signOut();
+
+      throw Exception(
+        'Please verify your email before signing in.',
+      );
+    }
+
+    // Get Firestore user profile
     final doc = await _firebaseFirestore
         .collection('users')
-        .doc(cred.user!.uid)
+        .doc(refreshedUser.uid)
         .get();
-    if (doc.exists && doc.data() != null) {
-      return UserModel.fromJson(doc.data()!);
-    } else {
-      throw Exception("User profile not found");
+
+    if (!doc.exists || doc.data() == null) {
+      await _firebaseAuth.signOut();
+
+      throw Exception(
+        'User profile not found.',
+      );
     }
+
+    return UserModel.fromJson(
+      doc.data()!,
+    );
   }
   @override
   Future<UserModel> registerStudent({

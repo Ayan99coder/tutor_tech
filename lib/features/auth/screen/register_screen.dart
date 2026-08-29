@@ -143,10 +143,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   void _submitRegisterForm() {
-    // ============================================================
-    // LEGAL CONSENT
-    // ============================================================
-
     if (!_legalConsent) {
       setState(
         () => _stepError =
@@ -154,10 +150,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
       return;
     }
-
-    // ============================================================
-    // STUDENT RECORDING CONSENT
-    // ============================================================
 
     if (_selectedRole == UserRole.student && !_recordingConsent) {
       setState(
@@ -167,28 +159,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    // ============================================================
-    // AUTH NOTIFIER
-    // ============================================================
-
     final authData = ref.read(authNotifierProvider.notifier);
-
-    // ============================================================
-    // COMMON DATA
-    // ============================================================
 
     final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    // ============================================================
-    // ROLE
-    // ============================================================
-
     switch (_selectedRole!) {
-      // ==========================================================
-      // STUDENT
-      // ==========================================================
 
       case UserRole.student:
         AgeGroup ageGroup = AgeGroup.gcse;
@@ -229,9 +206,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
         break;
 
-      // ==========================================================
-      // TUTOR
-      // ==========================================================
 
       case UserRole.tutor:
         authData.registerTutorWithEmailAndPassword(
@@ -247,10 +221,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
         break;
 
-      // ==========================================================
-      // PARENT
-      // ==========================================================
-
       case UserRole.parent:
         authData.registerParentWithEmailAndPassword(
           fullName: fullName,
@@ -264,9 +234,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
         break;
 
-      // ==========================================================
-      // ADMIN
-      // ==========================================================
     }
   }
 
