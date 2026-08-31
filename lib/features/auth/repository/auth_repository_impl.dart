@@ -97,7 +97,6 @@ class AuthRepositoryImpl implements AuthRepository {
         email: email.trim(),
         password: password,
       );
-
       final firebaseUser = credential.user;
 
       if (firebaseUser == null) {
@@ -116,7 +115,6 @@ class AuthRepositoryImpl implements AuthRepository {
         isActive: false,
         createdAt: now,
       );
-
       // 5. Create StudentModel
       final newStudent = StudentModel(
         id: firebaseUser.uid,

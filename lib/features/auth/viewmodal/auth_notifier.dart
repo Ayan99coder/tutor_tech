@@ -11,13 +11,13 @@ import '../repository/auth_repository.dart';
 
 class AuthNotifier extends Notifier<AuthState> {
   late final AuthRepository repo;
-final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
+  final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
+
   @override
   build() {
     repo = ref.read(authRepoProvider);
     return AuthState();
   }
-
 
   Future<void> registerStudentWithEmailAndPassword({
     required String fullName,
@@ -30,13 +30,10 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
     required bool isUnder13,
     String? parentEmail,
   }) async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-    );
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final user = await repo.registerStudent(
+      await repo.registerStudent(
         fullName: fullName,
         email: email,
         password: password,
@@ -47,11 +44,11 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
         isUnder13: isUnder13,
         parentEmail: parentEmail,
       );
-
+      await repo.signOut();
       state = state.copyWith(
         isLoading: false,
-        isAuthenticated: true,
-        currentUser: user,
+        isAuthenticated: false,
+        currentUser: null,
         isEmailVerified: false,
       );
     } catch (e) {
@@ -62,9 +59,6 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
     }
   }
 
-  // ============================================================
-  // TUTOR REGISTRATION
-  // ============================================================
 
   Future<void> registerTutorWithEmailAndPassword({
     required String fullName,
@@ -76,13 +70,10 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
     required List<String> teachingLevels,
     String? cvLink,
   }) async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-    );
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final user = await repo.registerTutor(
+      await repo.registerTutor(
         fullName: fullName,
         email: email,
         password: password,
@@ -92,11 +83,11 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
         teachingLevels: teachingLevels,
         cvLink: cvLink,
       );
-
+      await repo.signOut();
       state = state.copyWith(
         isLoading: false,
-        isAuthenticated: true,
-        currentUser: user,
+        isAuthenticated: false,
+        currentUser: null,
         isEmailVerified: false,
       );
     } catch (e) {
@@ -106,10 +97,6 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
       );
     }
   }
-
-  // ============================================================
-  // PARENT REGISTRATION
-  // ============================================================
 
   Future<void> registerParentWithEmailAndPassword({
     required String fullName,
@@ -117,23 +104,20 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
     required String password,
     required List<String> childrenEmails,
   }) async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-    );
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final user = await repo.registerParent(
+      await repo.registerParent(
         fullName: fullName,
         email: email,
         password: password,
         childrenEmails: childrenEmails,
       );
-
+      await repo.signOut();
       state = state.copyWith(
         isLoading: false,
-        isAuthenticated: true,
-        currentUser: user,
+        isAuthenticated: false,
+        currentUser: null,
         isEmailVerified: false,
       );
     } catch (e) {
@@ -144,24 +128,12 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
     }
   }
 
-  // ============================================================
-  // LOGIN
-  // ============================================================
 
-  Future<void> signInWithEmail(
-      String email,
-      String password,
-      ) async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-    );
+  Future<void> signInWithEmail(String email, String password) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final user = await repo.signInWithEmail(
-        email,
-        password,
-      );
+      final user = await repo.signInWithEmail(email, password);
 
       state = state.copyWith(
         isLoading: false,
@@ -177,15 +149,9 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
     }
   }
 
-  // ============================================================
-  // SIGN OUT
-  // ============================================================
 
   Future<void> signOut() async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-    );
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
       await repo.signOut();
@@ -203,5 +169,4 @@ final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
       );
     }
   }
-
 }

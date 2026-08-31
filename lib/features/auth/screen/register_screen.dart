@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:tutor_tech/core/constants/app_strings.dart';
 import 'package:tutor_tech/core/widgets/custom_button.dart';
@@ -166,7 +167,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final password = _passwordController.text;
 
     switch (_selectedRole!) {
-
       case UserRole.student:
         AgeGroup ageGroup = AgeGroup.gcse;
 
@@ -206,7 +206,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
         break;
 
-
       case UserRole.tutor:
         authData.registerTutorWithEmailAndPassword(
           fullName: fullName,
@@ -233,7 +232,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
 
         break;
-
     }
   }
 
@@ -303,6 +301,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
           );
+      }
+    });
+    ref.listen<AuthState>(authNotifierProvider, (prev,next) {
+      if (!next.isAuthenticated) {
+        context.go('/login');
       }
     });
     final authState = ref.watch(authNotifierProvider);
