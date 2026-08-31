@@ -10,6 +10,6 @@ class TutorDasboardScreen extends StatefulWidget {
 class _TutorDasboardScreenState extends State<TutorDasboardScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(body: Center(child: Text('this is tutor'),),);
   }
 }

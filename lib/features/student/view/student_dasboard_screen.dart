@@ -10,6 +10,6 @@ class StudentDasboardScreen extends StatefulWidget {
 class _StudentDasboardScreenState extends State<StudentDasboardScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(body: Center(child: Text('this is student')));
   }
 }
