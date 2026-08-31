@@ -30,7 +30,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required bool isUnder13,
     String? parentEmail,
   }) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(isLoading: true, errorMessage: null, isRegSuccess: false);
 
     try {
       await repo.registerStudent(
@@ -48,6 +48,7 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(
         isLoading: false,
         isAuthenticated: false,
+        isRegSuccess: true,
         currentUser: null,
         isEmailVerified: false,
       );
@@ -70,7 +71,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required List<String> teachingLevels,
     String? cvLink,
   }) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(isLoading: true, errorMessage: null,isRegSuccess: false);
 
     try {
       await repo.registerTutor(
@@ -89,6 +90,7 @@ class AuthNotifier extends Notifier<AuthState> {
         isAuthenticated: false,
         currentUser: null,
         isEmailVerified: false,
+        isRegSuccess: true
       );
     } catch (e) {
       state = state.copyWith(
@@ -104,7 +106,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required String password,
     required List<String> childrenEmails,
   }) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(isLoading: true, errorMessage: null,isRegSuccess: false);
 
     try {
       await repo.registerParent(
@@ -117,6 +119,7 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(
         isLoading: false,
         isAuthenticated: false,
+        isRegSuccess: true,
         currentUser: null,
         isEmailVerified: false,
       );

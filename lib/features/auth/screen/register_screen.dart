@@ -304,7 +304,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     });
     ref.listen<AuthState>(authNotifierProvider, (prev,next) {
-      if (!next.isAuthenticated) {
+      if (!prev!.isRegSuccess&&next.isRegSuccess) {
         context.go('/login');
       }
     });

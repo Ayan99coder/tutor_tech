@@ -6,7 +6,7 @@ import '../../features/auth/screen/register_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/register',
 
     routes: [
       GoRoute(

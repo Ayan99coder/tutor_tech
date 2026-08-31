@@ -9,10 +9,11 @@ class AuthState {
   final String? errorMessage;
   final int registrationStep;
   final bool isEmailVerified;
-
+final bool isRegSuccess;
   const AuthState({
     this.isLoading = false,
     this.isAuthenticated = false,
+    this.isRegSuccess = false,
     this.currentUser,
     this.errorMessage,
     this.registrationStep = 0,
@@ -26,8 +27,10 @@ class AuthState {
     String? errorMessage,
     int? registrationStep,
     bool? isEmailVerified,
+    bool? isRegSuccess,
   }) {
     return AuthState(
+      isRegSuccess: isRegSuccess??this.isRegSuccess,
       isLoading: isLoading ?? this.isLoading,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       currentUser: currentUser ?? this.currentUser,
