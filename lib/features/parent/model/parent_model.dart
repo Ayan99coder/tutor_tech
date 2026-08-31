@@ -1,6 +1,6 @@
 
 
-import '../../student/student_model.dart';
+import '../../student/model/student_model.dart';
 
 class ParentModel {
   final String id;

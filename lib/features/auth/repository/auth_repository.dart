@@ -1,4 +1,4 @@
-import '../../student/student_model.dart';
+import '../../student/model/student_model.dart';
 import '../modal/user_model.dart';
 
 abstract class AuthRepository {

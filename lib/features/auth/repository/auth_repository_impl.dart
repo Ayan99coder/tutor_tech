@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tutor_tech/features/auth/repository/auth_repository.dart';
 
 import '../../parent/model/parent_model.dart';
-import '../../student/student_model.dart';
+import '../../student/model/student_model.dart';
 import '../../tutor/model/tutor_model.dart';
 import '../modal/user_model.dart';
 

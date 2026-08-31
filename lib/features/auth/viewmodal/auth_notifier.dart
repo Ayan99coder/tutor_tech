@@ -6,7 +6,7 @@ import 'package:tutor_tech/features/auth/authProvider/auth_provider.dart';
 
 import 'package:tutor_tech/features/auth/viewmodal/auth_state.dart';
 
-import '../../student/student_model.dart';
+import '../../student/model/student_model.dart';
 import '../repository/auth_repository.dart';
 
 class AuthNotifier extends Notifier<AuthState> {

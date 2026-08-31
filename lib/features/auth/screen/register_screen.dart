@@ -14,7 +14,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/utils/validators.dart';
 import '../../../core/widgets/custom_textfield.dart';
 import '../../../core/widgets/subject_chip.dart';
-import '../../student/student_model.dart';
+import '../../student/model/student_model.dart';
 import '../../subject/subject_model.dart';
 import '../modal/user_model.dart';
 import '../viewmodal/auth_state.dart';
