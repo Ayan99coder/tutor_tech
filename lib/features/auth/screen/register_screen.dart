@@ -303,9 +303,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
       }
     });
-    ref.listen<AuthState>(authNotifierProvider, (prev,next) {
-      if (!prev!.isRegSuccess&&next.isRegSuccess) {
+    ref.listen<AuthState>(authNotifierProvider, (prev, next) {
+      if (!prev!.isRegSuccess && next.isRegSuccess) {
         context.go('/login');
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              elevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              backgroundColor: AppColors.success,
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'your account register successfully and verification email is send to your email log or spam log',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
       }
     });
     final authState = ref.watch(authNotifierProvider);

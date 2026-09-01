@@ -20,7 +20,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: ' /student-dashboard',
+        path: '/student-dashboard',
         name: 'student',
         builder: (context, state) {
           return const StudentDasboardScreen();

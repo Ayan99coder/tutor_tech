@@ -57,7 +57,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authNotifierProvider, (prev, next) {
-      if (next.isAuthenticated && next.currentUser != null) {
+      if (next.isAuthenticated &&
+          next.currentUser != null &&
+          next.isEmailVerified) {
         final user = next.currentUser!;
         switch (user.role) {
           case UserRole.tutor:
