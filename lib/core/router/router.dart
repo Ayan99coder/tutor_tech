@@ -16,14 +16,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/tutor-dashboard',
         name: 'tutor',
         builder: (context, state) {
-          return const TutorDasboardScreen();
+          return const TutorDashboardScreen();
         },
       ),
       GoRoute(
         path: '/student-dashboard',
         name: 'student',
         builder: (context, state) {
-          return const StudentDasboardScreen();
+          return const StudentDashboardScreen();
         },
       ),
       GoRoute(
