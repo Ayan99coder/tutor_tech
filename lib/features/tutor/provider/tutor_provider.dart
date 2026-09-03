@@ -8,6 +8,6 @@ import 'package:tutor_tech/features/tutor/viewmodal/tutor_state.dart';
 final tutorRepoProvider = Provider<TutorRepository>((ref) {
   return TutorRepositoryImpl(ref.read(fireStoreProvider));
 });
-final tutorProvider = NotifierProviderFamily<TutorNotifier, TutorState, String>(
+final tutorProvider = AsyncNotifierProviderFamily<TutorNotifier, TutorState, String>(
   TutorNotifier.new,
 );
