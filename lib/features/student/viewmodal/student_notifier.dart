@@ -11,11 +11,17 @@ class StudentNotifier extends FamilyAsyncNotifier<StudentState, String> {
   Future<StudentState> build(String id) async {
     repo = ref.read(studentRepoProvider);
     getStudentById();
+    getAssignedTutor();
     return StudentState();
   }
 
   Future<void> getStudentById() async {
     final data = await repo.getStudentById(arg);
     state = AsyncData(state.requireValue.copyWith(student: data));
+  }
+
+  Future<void> getAssignedTutor() async {
+    final data = await repo.getAssignedTutors(arg);
+    state = AsyncData(state.requireValue.copyWith(assignedTutors: data));
   }
 }

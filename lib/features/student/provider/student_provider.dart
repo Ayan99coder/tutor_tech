@@ -4,10 +4,11 @@ import 'package:tutor_tech/features/student/repostiory/repository.dart';
 import 'package:tutor_tech/features/student/repostiory/repository_impl.dart';
 import 'package:tutor_tech/features/student/viewmodal/student_notifier.dart';
 import 'package:tutor_tech/features/student/viewmodal/student_state.dart';
+import 'package:tutor_tech/features/tutor/provider/tutor_provider.dart';
 
 
 final studentRepoProvider = Provider<StudentRepository>((ref) {
-  return StudentRepositoryImpl(ref.read(fireStoreProvider));
+  return StudentRepositoryImpl(ref.read(fireStoreProvider),ref.read(tutorRepoProvider));
 });
 final studentProvider = AsyncNotifierProviderFamily<
     StudentNotifier,
