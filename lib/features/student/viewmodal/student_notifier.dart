@@ -12,7 +12,9 @@ class StudentNotifier extends FamilyAsyncNotifier<StudentState, String> {
     repo = ref.read(studentRepoProvider);
     getStudentById();
     getAssignedTutor();
-    return StudentState();
+    return StudentState(
+
+    );
   }
 
   Future<void> getStudentById() async {
