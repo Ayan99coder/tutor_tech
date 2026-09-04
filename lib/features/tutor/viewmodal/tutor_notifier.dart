@@ -3,20 +3,14 @@ import 'package:tutor_tech/features/tutor/provider/tutor_provider.dart';
 import 'package:tutor_tech/features/tutor/repository/repostiory.dart';
 import 'package:tutor_tech/features/tutor/viewmodal/tutor_state.dart';
 
-class TutorNotifier extends FamilyAsyncNotifier<TutorState, String> {
-  late final String ids;
+class TutorNotifier extends FamilyAsyncNotifier<TutorState, String?> {
   late final TutorRepository repo;
 
   @override
-  TutorState build(String id) {
-    ids = id;
+  Future<TutorState> build(String? id) async {
     repo = ref.read(tutorRepoProvider);
-    getTutorById();
-    return TutorState();
-  }
+    final tutor = await repo.getTutorById(id!);
 
-  Future<void> getTutorById() async {
-    final user = await repo.getTutorById(ids);
-    state = AsyncData(state.requireValue.copyWith(tutor: user));
+    return TutorState(tutor: tutor,);
   }
 }

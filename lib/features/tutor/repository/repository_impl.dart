@@ -9,7 +9,7 @@ class TutorRepositoryImpl implements TutorRepository {
 
   @override
   Future<TutorModel?> getTutorById(String id) async {
-    final tutor = await _firestore.collection('tutor').doc(id).get();
+    final tutor = await _firestore.collection('tutors').doc(id).get();
     if(tutor.exists && tutor.data() != null){
       return TutorModel.fromJson(tutor.data()!);
     }

@@ -71,7 +71,7 @@ class StudentDashboardScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Assigned Tutor : ${student.assignedTutors??'tutor'} ',
+                                'Assigned Tutor : ${student.assignedTutors??[]} ',
                                 style: AppTextStyles.bodyMedium.copyWith(color: AppColors.accentLight),
                               ),
                               const SizedBox(height: 12),

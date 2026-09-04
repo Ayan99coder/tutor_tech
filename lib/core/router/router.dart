@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tutor_tech/features/parent/view/parent_dasboard_screen.dart';
+import 'package:tutor_tech/features/session/view/assign_session_screen.dart';
 import 'package:tutor_tech/features/student/view/student_dasboard_screen.dart';
 import 'package:tutor_tech/features/tutor/view/tutor_dasboard_screen.dart';
 
@@ -46,6 +47,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'register',
         builder: (context, state) {
           return const RegisterScreen();
+        },
+      ),
+      GoRoute(
+        path: '/assign-session',
+        builder: (context, state) {
+
+
+          return AssignSessionScreen(
+
+          );
         },
       ),
     ],

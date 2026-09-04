@@ -10,20 +10,8 @@ class StudentNotifier extends FamilyAsyncNotifier<StudentState, String> {
   @override
   Future<StudentState> build(String id) async {
     repo = ref.read(studentRepoProvider);
-    getStudentById();
-    getAssignedTutor();
-    return StudentState(
-
-    );
-  }
-
-  Future<void> getStudentById() async {
-    final data = await repo.getStudentById(arg);
-    state = AsyncData(state.requireValue.copyWith(student: data));
-  }
-
-  Future<void> getAssignedTutor() async {
-    final data = await repo.getAssignedTutors(arg);
-    state = AsyncData(state.requireValue.copyWith(assignedTutors: data));
+    final student = await repo.getStudentById(id);
+    final assignedTutor = await repo.getAssignedTutors(id);
+    return StudentState(student: student, assignedTutors: assignedTutor);
   }
 }
