@@ -19,11 +19,11 @@ class SessionNotifier extends AsyncNotifier<SessionState> {
 
     final tutors = await repo.getTutorsBySubject(subject);
 
-    state = AsyncData(
-      currentState.copyWith(
-        tutors: tutors ?? [],
-      ),
-    );
+    state = AsyncData(currentState.copyWith(tutors: tutors ?? []));
   }
 
+  Future<void> getStudentBySubject(String sub) async {
+    final student = await repo.getStudentBySubject(sub);
+    state = AsyncData(state.requireValue.copyWith(studentsBySubject: student??[]));
+  }
 }

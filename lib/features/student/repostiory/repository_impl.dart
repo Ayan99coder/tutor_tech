@@ -18,7 +18,8 @@ class StudentRepositoryImpl implements StudentRepository {
     }
     return null;
   }
-@override
+
+  @override
   Future<List<TutorModel>> getAssignedTutors(String id) async {
     final student = await getStudentById(id);
 
@@ -38,4 +39,5 @@ class StudentRepositoryImpl implements StudentRepository {
         )
         .toList();
   }
+
 }
