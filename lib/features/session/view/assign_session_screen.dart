@@ -21,7 +21,7 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
   String _selectedSubject = 'gcse_maths';
   String? _selectedTutorId;
   int _audienceScope = 0;
-List<String> _selectedStudentId=[];
+final List<String> _selectedStudentId=[];
   @override
   Widget build(BuildContext context) {
     final sessionFilteredTutor = ref.watch(sessionProvider);
