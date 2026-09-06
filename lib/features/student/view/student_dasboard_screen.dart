@@ -31,7 +31,7 @@ class StudentDashboardScreen extends ConsumerWidget {
           },
 
           error: (error, stackTrace) {
-            return CustomErrorWidget(message: error.toString(), onRetry: (){studentAsync;});
+            return CustomErrorWidget(message: error.toString(), onRetry: (){ref.invalidate(studentProvider(user.id));});
           },
 
           data: (student) {

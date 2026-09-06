@@ -17,7 +17,7 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
   final TextEditingController _title = TextEditingController();
   String _selectedSubject = 'gcse_maths';
   String? _selectedTutorId;
-
+  int _audienceScope = 0;
   @override
   Widget build(BuildContext context) {
     final sessionFilteredTutor = ref.watch(sessionProvider);
@@ -92,6 +92,16 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
                 return DropdownButtonFormField(items: [], onChanged: (val) {});
               },
             ),
+            SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(value: 0, label: Text('Public 🌐')),
+                ButtonSegment(value: 1, label: Text('Specific Student 👤')),
+                ButtonSegment(value: 2, label: Text('Student Group 👥')),
+              ],
+              selected: {_audienceScope},
+              onSelectionChanged: (val) => setState(() => _audienceScope = val.first),
+            ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
