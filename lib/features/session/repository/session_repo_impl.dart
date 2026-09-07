@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tutor_tech/features/session/modal/session_modal.dart';
 import 'package:tutor_tech/features/session/repository/session_repo.dart';
 import 'package:tutor_tech/features/tutor/model/tutor_model.dart';
 import 'package:tutor_tech/features/tutor/repository/repostiory.dart';
@@ -38,5 +39,18 @@ class SessionRepoImpl implements SessionRepo{
     return snapshot.docs
         .map((doc) => StudentModel.fromJson(doc.data()))
         .toList();
+  }
+
+  @override
+  Future<SessionModel> createSession(SessionModel session) async {
+    final fs = _firestore ?? FirebaseFirestore.instance;
+
+    final docRef = fs.collection('sessions').doc();
+
+    await docRef.set({
+      ...session.toJson(),
+      'id': docRef.id,
+    });
+    return session;
   }
 }

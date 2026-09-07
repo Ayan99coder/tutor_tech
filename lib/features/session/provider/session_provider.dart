@@ -8,6 +8,7 @@ import 'package:tutor_tech/features/tutor/provider/tutor_provider.dart';
 final sessionRepoProvider = Provider((ref) {
   return SessionRepoImpl(ref.read(tutorRepoProvider),ref.read(fireStoreProvider));
 });
-final sessionProvider = AsyncNotifierProvider<SessionNotifier, SessionState>(
+final sessionProvider =
+AsyncNotifierProvider.autoDispose<SessionNotifier, SessionState>(
   SessionNotifier.new,
 );
