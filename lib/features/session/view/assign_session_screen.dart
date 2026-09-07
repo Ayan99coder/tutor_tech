@@ -66,9 +66,10 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
       next.whenOrNull(
         data: (sessionState) {
           if (sessionState.isCreateSuccess) {
+            final title = sessionState.createdSessionTitle;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Session created successfully'),
+              SnackBar(
+                content: Text('Session $title created successfully'),
               ),
             );
           }

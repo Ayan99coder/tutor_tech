@@ -33,8 +33,11 @@ class SessionNotifier extends AutoDisposeAsyncNotifier<SessionState> {
 
   Future<void> saveSession(SessionModel session) async {
     state = await AsyncValue.guard(() async {
-      await repo.createSession(session);
-      return const SessionState(isCreateSuccess: true);
+      final sessionTitle = await repo.createSession(session);
+      return  SessionState(
+        isCreateSuccess: true,
+        createdSessionTitle:sessionTitle.title ,
+      );
     });
   }
 }
