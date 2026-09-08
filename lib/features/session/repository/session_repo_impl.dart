@@ -6,10 +6,12 @@ import 'package:tutor_tech/features/tutor/repository/repostiory.dart';
 
 import '../../student/model/student_model.dart';
 
-class SessionRepoImpl implements SessionRepo{
+class SessionRepoImpl implements SessionRepo {
   final TutorRepository repo;
   final FirebaseFirestore _firestore;
-  SessionRepoImpl(this.repo,this._firestore);
+
+  SessionRepoImpl(this.repo, this._firestore);
+
   @override
   Future<List<TutorModel>?> getTutorsBySubject(String subject) async {
     final tutors = await repo.getAllTutors();
@@ -18,10 +20,9 @@ class SessionRepoImpl implements SessionRepo{
 
     final filteredTutors = tutors?.where((tutor) {
       return tutor.subjectExpertise.any(
-            (sbj) => sbj.trim().toLowerCase() == normalizedSubject,
+        (sbj) => sbj.trim().toLowerCase() == normalizedSubject,
       );
     }).toList();
-
 
     if (filteredTutors == null || filteredTutors.isEmpty) {
       return tutors;
@@ -29,6 +30,7 @@ class SessionRepoImpl implements SessionRepo{
 
     return filteredTutors;
   }
+
   @override
   Future<List<StudentModel>>? getStudentBySubject(String subject) async {
     final snapshot = await _firestore
@@ -47,10 +49,39 @@ class SessionRepoImpl implements SessionRepo{
 
     final docRef = fs.collection('sessions').doc();
 
-    await docRef.set({
-      ...session.toJson(),
-      'id': docRef.id,
-    });
+    await docRef.set({...session.toJson(), 'id': docRef.id});
     return session;
+  }
+@override
+  Stream<List<SessionModel>> watchSessions() {
+    return _firestore.collection('sessions').snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) => SessionModel.fromJson(doc.data()))
+          .toList();
+    });
+  }
+  @override
+  Stream<List<SessionModel>> watchStudentSessions(String studentId) {
+    return _firestore
+        .collection('sessions')
+        .where('studentIds', arrayContains: studentId)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+          .map((doc) => SessionModel.fromJson(doc.data()))
+          .toList(),
+    );
+  }
+  @override
+  Stream<List<SessionModel>> watchTutorSessions(String tutorId) {
+    return _firestore
+        .collection('sessions')
+        .where('tutorId', isEqualTo: tutorId)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+          .map((doc) => SessionModel.fromJson(doc.data()))
+          .toList(),
+    );
   }
 }

@@ -59,4 +59,26 @@ class SessionModel {
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
+
+  factory SessionModel.fromJson(Map<String, dynamic> json) {
+    return SessionModel(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      tutorId: json['tutorId'] as String,
+      studentIds: List<String>.from(json['studentIds'] ?? []),
+      subject: json['subject'] as String,
+      level: json['level'] as String?,
+      groupSize: json['groupSize'] as int,
+      audienceScope: AudienceScope.values.byName(
+        json['audienceScope'] as String,
+      ),
+      platform: ClassroomPlatform.values.byName(
+        json['platform'] as String,
+      ),
+      meetingLink: json['meetingLink'] as String,
+      scheduledAt: (json['scheduledAt'] as Timestamp).toDate(),
+      notes: json['notes'] as String?,
+      createdAt: (json['createdAt'] as Timestamp).toDate(),
+    );
+  }
 }
