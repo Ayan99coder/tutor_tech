@@ -9,6 +9,6 @@ final sessionRepoProvider = Provider((ref) {
   return SessionRepoImpl(ref.read(tutorRepoProvider),ref.read(fireStoreProvider));
 });
 final sessionProvider =
-AsyncNotifierProvider.autoDispose<SessionNotifier, SessionState>(
+AsyncNotifierProvider<SessionNotifier, SessionState>(
   SessionNotifier.new,
 );
