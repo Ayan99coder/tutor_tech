@@ -15,7 +15,9 @@ class StudentDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authNotifierProvider).currentUser;
+    final user = ref
+        .watch(authNotifierProvider)
+        .currentUser;
 
     if (user == null) {
       return const Scaffold(body: Center(child: Text('User not found')));
@@ -31,7 +33,9 @@ class StudentDashboardScreen extends ConsumerWidget {
           },
 
           error: (error, stackTrace) {
-            return CustomErrorWidget(message: error.toString(), onRetry: (){ref.invalidate(studentProvider(user.id));});
+            return CustomErrorWidget(message: error.toString(), onRetry: () {
+              ref.invalidate(studentProvider(user.id));
+            });
           },
 
           data: (student) {
@@ -56,33 +60,44 @@ class StudentDashboardScreen extends ConsumerWidget {
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [AppColors.primary, AppColors.primaryLight],
+                              colors: [
+                                AppColors.primary,
+                                AppColors.primaryLight
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusCard),
+                            borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusCard),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Hello, ${state?.fullName ?? "Student"} 👋',
-                                style: AppTextStyles.h2.copyWith(color: Colors.white),
+                                style: AppTextStyles.h2.copyWith(
+                                    color: Colors.white),
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Assigned Tutor : ${student.assignedTutors??[]} ',
-                                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.accentLight),
+                                'Assigned Tutor : ${student.assignedTutors ??
+                                    []} ',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.accentLight),
                               ),
                               const SizedBox(height: 12),
                               Wrap(
                                 spacing: 8,
-                                children: (state?.selectedSubjects ?? []).map((s) {
+                                children: (state?.selectedSubjects ?? []).map((
+                                    s) {
                                   return Chip(
-                                    label: Text(s.toUpperCase().replaceAll('_', ' ')),
+                                    label: Text(
+                                        s.toUpperCase().replaceAll('_', ' ')),
                                     backgroundColor: AppColors.secondary,
-                                    shape: RoundedRectangleBorder(borderRadius: .circular(12)),
-                                    labelStyle: AppTextStyles.labelSmall.copyWith(color: Colors.white),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: .circular(12)),
+                                    labelStyle: AppTextStyles.labelSmall
+                                        .copyWith(color: Colors.white),
                                   );
                                 }).toList(),
                               ),
