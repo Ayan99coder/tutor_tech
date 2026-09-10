@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutor_tech/core/widgets/error_widgets.dart';
 import 'package:tutor_tech/features/auth/authProvider/auth_provider.dart';
+import 'package:tutor_tech/features/session/provider/session_provider.dart';
 import 'package:tutor_tech/features/student/provider/student_provider.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -15,16 +16,14 @@ class StudentDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref
-        .watch(authNotifierProvider)
-        .currentUser;
+    final user = ref.watch(authNotifierProvider).currentUser;
 
     if (user == null) {
       return const Scaffold(body: Center(child: Text('User not found')));
     }
 
     final studentAsync = ref.watch(studentProvider(user.id));
-
+    final sessionState = ref.watch(studentSessions(user.id));
     return Scaffold(
       body: Center(
         child: studentAsync.when(
@@ -33,9 +32,12 @@ class StudentDashboardScreen extends ConsumerWidget {
           },
 
           error: (error, stackTrace) {
-            return CustomErrorWidget(message: error.toString(), onRetry: () {
-              ref.invalidate(studentProvider(user.id));
-            });
+            return CustomErrorWidget(
+              message: error.toString(),
+              onRetry: () {
+                ref.invalidate(studentProvider(user.id));
+              },
+            );
           },
 
           data: (student) {
@@ -46,7 +48,6 @@ class StudentDashboardScreen extends ConsumerWidget {
                   title: 'My Learning Hub',
                   showBackButton: false,
                   showNotificationBell: true,
-
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
@@ -56,63 +57,72 @@ class StudentDashboardScreen extends ConsumerWidget {
                       children: [
                         // HERO CARD (Primary Color Gradient)
                         Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppColors.primary,
-                                AppColors.primaryLight
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(
-                                AppDimensions.radiusCard),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Hello, ${state?.fullName ?? "Student"} 👋',
-                                style: AppTextStyles.h2.copyWith(
-                                    color: Colors.white),
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    AppColors.primary,
+                                    AppColors.primaryLight,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusCard,
+                                ),
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Assigned Tutor : ${student.assignedTutors ??
-                                    []} ',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.accentLight),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Hello, ${state?.fullName ?? "Student"} 👋',
+                                    style: AppTextStyles.h2.copyWith(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Assigned Tutor : ${student.assignedTutors ?? []} ',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.accentLight,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Wrap(
+                                    spacing: 8,
+                                    children: (state?.selectedSubjects ?? [])
+                                        .map((s) {
+                                          return Chip(
+                                            label: Text(
+                                              s.toUpperCase().replaceAll(
+                                                '_',
+                                                ' ',
+                                              ),
+                                            ),
+                                            backgroundColor:
+                                                AppColors.secondary,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: .circular(12),
+                                            ),
+                                            labelStyle: AppTextStyles.labelSmall
+                                                .copyWith(color: Colors.white),
+                                          );
+                                        })
+                                        .toList(),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 12),
-                              Wrap(
-                                spacing: 8,
-                                children: (state?.selectedSubjects ?? []).map((
-                                    s) {
-                                  return Chip(
-                                    label: Text(
-                                        s.toUpperCase().replaceAll('_', ' ')),
-                                    backgroundColor: AppColors.secondary,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: .circular(12)),
-                                    labelStyle: AppTextStyles.labelSmall
-                                        .copyWith(color: Colors.white),
-                                  );
-                                }).toList(),
-                              ),
-                            ],
-                          ),
-                        ).animate()
+                            )
+                            .animate()
                             .fade(duration: const Duration(milliseconds: 500))
                             .scale(
-                          begin: const Offset(0.95, 0.95),
-                          end: const Offset(1.0, 1.0),
-                          curve: Curves.easeOutCubic,
-                          duration: const Duration(milliseconds: 500),
-                        ),
+                              begin: const Offset(0.95, 0.95),
+                              end: const Offset(1.0, 1.0),
+                              curve: Curves.easeOutCubic,
+                              duration: const Duration(milliseconds: 500),
+                            ),
                         const SizedBox(height: 24),
-
                       ],
                     ),
                   ),
