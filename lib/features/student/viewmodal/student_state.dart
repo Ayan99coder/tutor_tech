@@ -5,7 +5,6 @@ import '../model/student_model.dart';
 class StudentState {
   final StudentModel? student;
   final List<TutorModel>? assignedTutors;
-
   const StudentState({this.student,this.assignedTutors});
 
   StudentState copyWith({
