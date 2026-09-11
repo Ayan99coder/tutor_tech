@@ -12,6 +12,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/custom_appBar.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/error_widgets.dart';
+import '../../../core/widgets/session_card.dart';
 
 class TutorDashboardScreen extends ConsumerWidget {
   const TutorDashboardScreen({super.key});
@@ -98,6 +99,24 @@ class TutorDashboardScreen extends ConsumerWidget {
 
                             // SECTION: Today's Sessions
                             Text("Today's Sessions", style: AppTextStyles.h3),
+                            sessionState.when(
+                              data: (sessions) {
+                                if (sessions.isEmpty) {
+                                  return const Text('No sessions scheduled.');
+                                }
+
+                                return Column(
+                                  children: sessions.map((session) {
+                                    return SessionCard(
+                                      session: session,
+                                      id: tutorId,
+                                    );
+                                  }).toList(),
+                                );
+                              },
+                              loading: () => const CircularProgressIndicator(),
+                              error: (error, stack) => Text(error.toString()),
+                            ),
                             const SizedBox(height: 12),
 
                             const SizedBox(height: 24),

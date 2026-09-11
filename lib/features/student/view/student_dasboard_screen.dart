@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutor_tech/core/widgets/error_widgets.dart';
+import 'package:tutor_tech/core/widgets/session_card.dart';
 import 'package:tutor_tech/features/auth/authProvider/auth_provider.dart';
 import 'package:tutor_tech/features/session/provider/session_provider.dart';
 import 'package:tutor_tech/features/student/provider/student_provider.dart';
@@ -55,7 +56,6 @@ class StudentDashboardScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // HERO CARD (Primary Color Gradient)
                         Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
@@ -122,6 +122,25 @@ class StudentDashboardScreen extends ConsumerWidget {
                               curve: Curves.easeOutCubic,
                               duration: const Duration(milliseconds: 500),
                             ),
+                        SizedBox(height: 24),
+                        Text("Today's Sessions", style: AppTextStyles.h3),
+                        sessionState.when(
+                          data: (sessions) {
+                            if (sessions.isEmpty) {
+                              return const Text('No sessions scheduled.');
+                            }
+                            return Column(
+                              children: sessions.map((session) {
+                                return SessionCard(
+                                  session: session,
+                                  id: user.id,
+                                );
+                              }).toList(),
+                            );
+                          },
+                          loading: () => const CircularProgressIndicator(),
+                          error: (error, stack) => Text(error.toString()),
+                        ),
 
                       ],
                     ),
