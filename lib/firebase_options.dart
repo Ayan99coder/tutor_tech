@@ -49,20 +49,3 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAW9unXHjZEzhfQybTEhU076fzYU14_3cg',
-    appId: '1:131825491827:android:3b7ce1696957c3e6586f06',
-    messagingSenderId: '131825491827',
-    projectId: 'tutortech-4542c',
-    storageBucket: 'tutortech-4542c.firebasestorage.app',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDtcFmpyVMxThvfCxhb-r7aHH90hAkc29A',
-    appId: '1:131825491827:ios:fb6445d248b61d3b586f06',
-    messagingSenderId: '131825491827',
-    projectId: 'tutortech-4542c',
-    storageBucket: 'tutortech-4542c.firebasestorage.app',
-    iosBundleId: 'com.example.tutorTech',
-  );
-}
