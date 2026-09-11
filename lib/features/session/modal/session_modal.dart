@@ -11,6 +11,14 @@ enum AudienceScope {
   studentGroup,
 }
 
+enum SessionStatus {
+  scheduled,
+  inProgress,
+  completed,
+  cancelled,
+  noShow,
+}
+
 class SessionModel {
   final String id;
   final String title;
@@ -25,6 +33,7 @@ class SessionModel {
   final DateTime scheduledAt;
   final String? notes;
   final DateTime createdAt;
+  final SessionStatus sessionStatus;
 
   const SessionModel({
     required this.id,
@@ -40,6 +49,7 @@ class SessionModel {
     required this.scheduledAt,
     this.notes,
     required this.createdAt,
+    required this.sessionStatus,
   });
 
   Map<String, dynamic> toJson() {
@@ -57,6 +67,9 @@ class SessionModel {
       'scheduledAt': Timestamp.fromDate(scheduledAt),
       'notes': notes,
       'createdAt': Timestamp.fromDate(createdAt),
+
+      // Session status
+      'sessionStatus': sessionStatus.name,
     };
   }
 
@@ -79,6 +92,11 @@ class SessionModel {
       scheduledAt: (json['scheduledAt'] as Timestamp).toDate(),
       notes: json['notes'] as String?,
       createdAt: (json['createdAt'] as Timestamp).toDate(),
+
+      // Session status
+      sessionStatus: SessionStatus.values.byName(
+        json['sessionStatus'] as String,
+      ),
     );
   }
 }

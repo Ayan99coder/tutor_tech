@@ -40,7 +40,16 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
   }
 
   void _createSession() {
-    final data = SessionModel(
+    final scheduledAt = DateTime(
+      _scheduledDate.year,
+      _scheduledDate.month,
+      _scheduledDate.day,
+      _scheduledTime.hour,
+      _scheduledTime.minute,
+    );
+
+    final session = SessionModel(
+      id: '',
       title: _title.text.trim(),
       tutorId: _selectedTutorId!,
       studentIds: List.from(_selectedStudentId),
@@ -50,14 +59,17 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
       audienceScope: AudienceScope.values[_audienceScope],
       platform: _platform,
       meetingLink: _zoomLinkController.text.trim(),
-      scheduledAt: _scheduledDate,
+      scheduledAt: scheduledAt,
       notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
       createdAt: DateTime.now(),
-      id: '',
+
+      // New session
+      sessionStatus: SessionStatus.scheduled,
     );
-    ref.read(sessionProvider.notifier).saveSession(data);
+
+    ref.read(sessionProvider.notifier).saveSession(session);
   }
 
   void _resetForm() {

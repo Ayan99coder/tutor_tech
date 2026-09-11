@@ -122,7 +122,7 @@ class StudentDashboardScreen extends ConsumerWidget {
                               curve: Curves.easeOutCubic,
                               duration: const Duration(milliseconds: 500),
                             ),
-                        const SizedBox(height: 24),
+
                       ],
                     ),
                   ),
