@@ -5,7 +5,6 @@ import 'package:tutor_tech/features/auth/authProvider/auth_provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 
-
 class CustomSliverAppBar extends ConsumerWidget {
   final String title;
   final bool showNotificationBell;
@@ -44,18 +43,27 @@ class CustomSliverAppBar extends ConsumerWidget {
           style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
         ),
       ),
-      leading: leading ??
+      leading:
+          leading ??
           (showBackButton && context.canPop()
               ? IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
-            onPressed: () => context.pop(),
-          )
+                  icon: const Icon(
+                    Icons.arrow_back_ios,
+                    color: AppColors.textPrimary,
+                    size: 20,
+                  ),
+                  onPressed: () => context.pop(),
+                )
               : (Scaffold.maybeOf(context)?.hasDrawer == true
-              ? IconButton(
-            icon: const Icon(Icons.menu_rounded, color: AppColors.textPrimary, size: 26),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          )
-              : null)),
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.menu_rounded,
+                          color: AppColors.textPrimary,
+                          size: 26,
+                        ),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                      )
+                    : null)),
       actions: [
         if (actions != null) ...actions!,
         if (showNotificationBell)
@@ -65,7 +73,11 @@ class CustomSliverAppBar extends ConsumerWidget {
               alignment: Alignment.center,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined, color: AppColors.textPrimary, size: 24),
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.textPrimary,
+                    size: 24,
+                  ),
                   onPressed: () {},
                 ),
                 if (notificationCount > 0)
@@ -98,23 +110,33 @@ class CustomSliverAppBar extends ConsumerWidget {
           ),
         if (showLogoutButton)
           IconButton(
-            icon: const Icon(Icons.logout_rounded, color: AppColors.textPrimary),
+            icon: const Icon(
+              Icons.logout_rounded,
+              color: AppColors.textPrimary,
+            ),
             tooltip: 'Logout',
             onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Confirm Sign Out'),
-                  content: const Text('Are you sure you want to log out of Takween Tutors?'),
+                  content: const Text(
+                    'Are you sure you want to log out of Tutor Tutors?',
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
                       child: const Text('Cancel'),
                     ),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                      ),
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Logout', style: TextStyle(color: Colors.white)),
+                      child: const Text(
+                        'Logout',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),

@@ -19,13 +19,13 @@ final sessionProvider = AsyncNotifierProvider<SessionNotifier, SessionState>(
 );
 
 final tutorSessions =
-    StreamNotifierProviderFamily<
+    StreamNotifierProvider.autoDispose.family<
       TutorSessionStreamNotifier,
       List<SessionModel>,
       String
     >(TutorSessionStreamNotifier.new);
 final studentSessions =
-    StreamNotifierProviderFamily<
+    StreamNotifierProvider.autoDispose.family<
       StudentSessionStreamNotifier,
       List<SessionModel>,
       String

@@ -66,6 +66,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _recordingConsent = false;
   bool _legalConsent = false;
 
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _parentEmailController.dispose();
+    _educationController.dispose();
+    _experienceController.dispose();
+    for (final controller in _childEmailControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
   Future<void> _pickResumeFile() async {
     try {
       final result = await FilePicker.pickFiles(
@@ -982,10 +997,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 selected: isSel,
                 onSelected: (val) {
                   setState(() {
-                    if (val)
+                    if (val) {
                       _tutorSubjectSlugs.add(sub);
-                    else
+                    } else {
                       _tutorSubjectSlugs.remove(sub);
+                    }
                   });
                 },
               );

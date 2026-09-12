@@ -52,6 +52,40 @@ class SessionModel {
     required this.sessionStatus,
   });
 
+  SessionModel copyWith({
+    String? id,
+    String? title,
+    String? tutorId,
+    List<String>? studentIds,
+    String? subject,
+    String? level,
+    int? groupSize,
+    AudienceScope? audienceScope,
+    ClassroomPlatform? platform,
+    String? meetingLink,
+    DateTime? scheduledAt,
+    String? notes,
+    DateTime? createdAt,
+    SessionStatus? sessionStatus,
+  }) {
+    return SessionModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      tutorId: tutorId ?? this.tutorId,
+      studentIds: studentIds ?? this.studentIds,
+      subject: subject ?? this.subject,
+      level: level ?? this.level,
+      groupSize: groupSize ?? this.groupSize,
+      audienceScope: audienceScope ?? this.audienceScope,
+      platform: platform ?? this.platform,
+      meetingLink: meetingLink ?? this.meetingLink,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      sessionStatus: sessionStatus ?? this.sessionStatus,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

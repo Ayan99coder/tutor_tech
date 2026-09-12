@@ -10,7 +10,7 @@ import 'package:tutor_tech/features/student/provider/student_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/widgets/custom_appBar.dart';
+import '../../../core/widgets/custom_appbar.dart';
 
 class StudentDashboardScreen extends ConsumerWidget {
   const StudentDashboardScreen({super.key});

@@ -12,11 +12,35 @@ import '../repository/auth_repository.dart';
 class AuthNotifier extends Notifier<AuthState> {
   late final AuthRepository repo;
   final AuthErrorHandler _authErrorHandler = AuthErrorHandler();
+  StreamSubscription? _authStateSubscription;
 
   @override
-  build() {
-    repo = ref.read(authRepoProvider);
-    return AuthState();
+  AuthState build() {
+    repo = ref.watch(authRepoProvider);
+    _authStateSubscription?.cancel();
+    _authStateSubscription = repo.authStateChanges().listen((user) {
+      if (user != null) {
+        state = state.copyWith(
+          currentUser: user,
+          isAuthenticated: true,
+          isEmailVerified: true,
+          isLoading: false,
+          errorMessage: null,
+        );
+      } else {
+        state = state.copyWith(
+          currentUser: null,
+          isAuthenticated: false,
+          isLoading: false,
+        );
+      }
+    });
+
+    ref.onDispose(() {
+      _authStateSubscription?.cancel();
+    });
+
+    return const AuthState(isLoading: true);
   }
 
   Future<void> registerStudentWithEmailAndPassword({

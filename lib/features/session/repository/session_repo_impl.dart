@@ -45,12 +45,10 @@ class SessionRepoImpl implements SessionRepo {
 
   @override
   Future<SessionModel> createSession(SessionModel session) async {
-    final fs = _firestore ?? FirebaseFirestore.instance;
-
-    final docRef = fs.collection('sessions').doc();
+    final docRef = _firestore.collection('sessions').doc();
 
     await docRef.set({...session.toJson(), 'id': docRef.id});
-    return session;
+    return session.copyWith(id: docRef.id);
   }
 @override
   Stream<List<SessionModel>> watchSessions() {

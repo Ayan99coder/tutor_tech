@@ -18,11 +18,11 @@ extension UserRoleExtension on UserRole {
   String get subtitle {
     switch (this) {
       case UserRole.tutor:
-        return 'I want to find tutors and attend sessions.';
-      case UserRole.student:
-        return 'I want to manage and pay for my child\'s tutoring.';
-      case UserRole.parent:
         return 'I want to teach students and manage my schedule.';
+      case UserRole.student:
+        return 'I want to find tutors and attend sessions.';
+      case UserRole.parent:
+        return 'I want to manage and pay for my child\'s tutoring.';
     }
   }
 
