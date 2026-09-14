@@ -10,8 +10,18 @@ import 'package:tutor_tech/features/session/view/assign_session_screen.dart';
 import 'package:tutor_tech/features/student/view/student_dasboard_screen.dart';
 import 'package:tutor_tech/features/tutor/view/tutor_dasboard_screen.dart';
 
-part 'router.g.dart';
+import '../../splashScreen.dart';
 
+part 'router.g.dart';
+@TypedGoRoute<SplashRoute>(path: '/')
+class SplashRoute extends GoRouteData with $SplashRoute {
+  const SplashRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const SplashScreen();
+  }
+}
 @TypedGoRoute<LoginRoute>(path: '/login')
 class LoginRoute extends GoRouteData with $LoginRoute {
   const LoginRoute();
@@ -75,35 +85,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/login',
     refreshListenable: notifier,
     routes: $appRoutes,
-    redirect: (context, state) {
-      final authState = ref.read(authNotifierProvider);
+      redirect: (context, state) {
+        final authState = ref.read(authNotifierProvider);
 
-      if (authState.isLoading) {
-        return null;
-      }
+        final location = state.matchedLocation;
 
-      final isAuthenticated = authState.isAuthenticated && authState.currentUser != null;
-      final isLoggingIn = state.matchedLocation == '/login';
-      final isRegistering = state.matchedLocation == '/register';
-
-      if (!isAuthenticated) {
-        return (isLoggingIn || isRegistering) ? null : '/login';
-      }
-
-      // If user is authenticated and trying to access /login or /register, redirect to role dashboard:
-      if (isLoggingIn || isRegistering) {
-        final role = authState.currentUser!.role;
-        switch (role) {
-          case UserRole.tutor:
-            return '/tutor-dashboard';
-          case UserRole.student:
-            return '/student-dashboard';
-          case UserRole.parent:
-            return '/parent-dashboard';
+        if (authState.isLoading) {
+          return location == '/' ? null : '/';
         }
-      }
 
-      return null;
-    },
+        final isAuthenticated =
+            authState.isAuthenticated &&
+                authState.currentUser != null;
+
+        if (!isAuthenticated) {
+          if (location == '/login' || location == '/register') {
+            return null;
+          }
+
+          return '/login';
+        }
+
+        // Authenticated user
+        final role = authState.currentUser!.role;
+
+        if (location == '/' ||
+            location == '/login' ||
+            location == '/register') {
+          switch (role) {
+            case UserRole.tutor:
+              return '/tutor-dashboard';
+
+            case UserRole.student:
+              return '/student-dashboard';
+
+            case UserRole.parent:
+              return '/parent-dashboard';
+          }
+        }
+
+        return null;
+      },
   );
 });
