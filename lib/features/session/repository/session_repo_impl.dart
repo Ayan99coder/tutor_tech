@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tutor_tech/features/session/modal/session_modal.dart';
 import 'package:tutor_tech/features/session/repository/session_repo.dart';
 import 'package:tutor_tech/features/tutor/model/tutor_model.dart';
@@ -39,7 +39,7 @@ class SessionRepoImpl implements SessionRepo {
         .get();
 
     return snapshot.docs
-        .map((doc) => StudentModel.fromJson(doc.data()))
+        .map((doc) => StudentModel.fromJson({...doc.data(), 'id': doc.id}))
         .toList();
   }
 
@@ -50,14 +50,16 @@ class SessionRepoImpl implements SessionRepo {
     await docRef.set({...session.toJson(), 'id': docRef.id});
     return session.copyWith(id: docRef.id);
   }
-@override
+
+  @override
   Stream<List<SessionModel>> watchSessions() {
     return _firestore.collection('sessions').snapshots().map((snapshot) {
       return snapshot.docs
-          .map((doc) => SessionModel.fromJson(doc.data()))
+          .map((doc) => SessionModel.fromJson({...doc.data(), 'id': doc.id}))
           .toList();
     });
   }
+
   @override
   Stream<List<SessionModel>> watchStudentSessions(String studentId) {
     return _firestore
@@ -66,10 +68,11 @@ class SessionRepoImpl implements SessionRepo {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-          .map((doc) => SessionModel.fromJson(doc.data()))
-          .toList(),
-    );
+              .map((doc) => SessionModel.fromJson({...doc.data(), 'id': doc.id}))
+              .toList(),
+        );
   }
+
   @override
   Stream<List<SessionModel>> watchTutorSessions(String tutorId) {
     return _firestore
@@ -78,8 +81,8 @@ class SessionRepoImpl implements SessionRepo {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-          .map((doc) => SessionModel.fromJson(doc.data()))
-          .toList(),
-    );
+              .map((doc) => SessionModel.fromJson({...doc.data(), 'id': doc.id}))
+              .toList(),
+        );
   }
 }

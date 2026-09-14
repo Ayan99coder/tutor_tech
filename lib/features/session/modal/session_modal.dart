@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ClassroomPlatform {
   zoom,
@@ -109,27 +109,32 @@ class SessionModel {
 
   factory SessionModel.fromJson(Map<String, dynamic> json) {
     return SessionModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      tutorId: json['tutorId'] as String,
+      // Firestore doc.id is stored as 'id' field in the map (or fallback to empty)
+      id: (json['id'] as String?) ?? '',
+      title: (json['title'] as String?) ?? '',
+      tutorId: (json['tutorId'] as String?) ?? '',
       studentIds: List<String>.from(json['studentIds'] ?? []),
-      subject: json['subject'] as String,
+      subject: (json['subject'] as String?) ?? '',
       level: json['level'] as String?,
-      groupSize: json['groupSize'] as int,
+      groupSize: (json['groupSize'] as int?) ?? 1,
       audienceScope: AudienceScope.values.byName(
-        json['audienceScope'] as String,
+        (json['audienceScope'] as String?) ?? AudienceScope.public.name,
       ),
       platform: ClassroomPlatform.values.byName(
-        json['platform'] as String,
+        (json['platform'] as String?) ?? ClassroomPlatform.zoom.name,
       ),
-      meetingLink: json['meetingLink'] as String,
-      scheduledAt: (json['scheduledAt'] as Timestamp).toDate(),
+      meetingLink: (json['meetingLink'] as String?) ?? '',
+      scheduledAt: json['scheduledAt'] != null
+          ? (json['scheduledAt'] as Timestamp).toDate()
+          : DateTime.now(),
       notes: json['notes'] as String?,
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
+      createdAt: json['createdAt'] != null
+          ? (json['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
 
       // Session status
       sessionStatus: SessionStatus.values.byName(
-        json['sessionStatus'] as String,
+        (json['sessionStatus'] as String?) ?? SessionStatus.scheduled.name,
       ),
     );
   }

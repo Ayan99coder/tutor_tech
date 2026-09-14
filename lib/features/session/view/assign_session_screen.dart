@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:tutor_tech/core/widgets/custom_textfield.dart';
@@ -127,6 +128,16 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
 
       appBar: AppBar(
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/tutor-dashboard');
+            }
+          },
+        ),
         title: const Text(
           'Assign Session',
           style: TextStyle(fontWeight: FontWeight.w700),
@@ -184,7 +195,7 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
                         const SizedBox(height: 8),
 
                         CustomTextField(
-                          label: 'e.g. Mathematics — Algebra',
+                          label: 'e.g. Mathematics â€” Algebra',
                           controller: _title,
                         ),
 
@@ -273,8 +284,8 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
                                 return DropdownMenuItem<String>(
                                   value: tutor.id,
                                   child: Text(
-                                    '${tutor.fullName}  •  '
-                                    '${tutor.isAvailable ? '[Available]' : '[Unavailable]'}  •  '
+                                    '${tutor.fullName}  â€¢  '
+                                    '${tutor.isAvailable ? '[Available]' : '[Unavailable]'}  â€¢  '
                                     '${tutor.subjectExpertise.join(', ')}',
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -874,3 +885,6 @@ class _AssignSessionScreenState extends ConsumerState<AssignSessionScreen> {
     );
   }
 }
+
+
+
