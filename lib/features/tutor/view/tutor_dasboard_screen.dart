@@ -133,7 +133,12 @@ class TutorDashboardScreen extends ConsumerWidget {
                             // SECTION: My Students (Dynamic)
                             Text('My Students', style: AppTextStyles.h3),
                             const SizedBox(height: 12),
-
+                            ...tutor.stdByTutor.map((e) {
+                              return _buildStudentAvatarCard(
+                                e.email,
+                                e.selectedSubjects.first,
+                              );
+                            }),
                             const SizedBox(height: 140),
                             // Clear spacing so bottom cards are never covered by floating BNB!
                           ],
@@ -161,6 +166,7 @@ class TutorDashboardScreen extends ConsumerWidget {
       ),
     );
   }
+
   Widget _buildStudentAvatarCard(String name, String subject) {
     final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : 'S';
 
@@ -181,20 +187,26 @@ class TutorDashboardScreen extends ConsumerWidget {
             child: Text(
               initial,
               style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(name,
-              style: AppTextStyles.labelLarge,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-          Text(subject,
-              style: AppTextStyles.bodySmall,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
+          Text(
+            name,
+            style: AppTextStyles.labelLarge,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            subject,
+            style: AppTextStyles.bodySmall,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
