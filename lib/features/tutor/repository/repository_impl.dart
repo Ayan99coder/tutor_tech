@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tutor_tech/features/tutor/model/tutor_model.dart';
 import 'package:tutor_tech/features/tutor/repository/repostiory.dart';
 
+import '../../student/model/student_model.dart';
+
 class TutorRepositoryImpl implements TutorRepository {
   final FirebaseFirestore _firestore;
 
@@ -22,5 +24,36 @@ class TutorRepositoryImpl implements TutorRepository {
     return snapshot.docs
         .map((doc) => TutorModel.fromJson(doc.data()))
         .toList();
+  }
+  @override
+  Future<List<StudentModel>> getStudentsByTutor(String tutorId) async {
+    final tutorDoc = await FirebaseFirestore.instance
+        .collection('tutors')
+        .doc(tutorId)
+        .get();
+
+    if (!tutorDoc.exists) return [];
+
+    final tutor = TutorModel.fromJson({
+      ...tutorDoc.data()!,
+      'id': tutorDoc.id,
+    });
+
+    if (tutor.subjectExpertise.isEmpty) return [];
+
+    final studentsSnapshot = await FirebaseFirestore.instance
+        .collection('students')
+        .where(
+      'selectedSubjects',
+      arrayContainsAny: tutor.subjectExpertise,
+    )
+        .get();
+
+    return studentsSnapshot.docs.map((doc) {
+      return StudentModel.fromJson({
+        ...doc.data(),
+        'id': doc.id,
+      });
+    }).toList();
   }
 }

@@ -161,4 +161,42 @@ class TutorDashboardScreen extends ConsumerWidget {
       ),
     );
   }
+  Widget _buildStudentAvatarCard(String name, String subject) {
+    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : 'S';
+
+    return Container(
+      width: 110,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: AppColors.studentColor,
+            child: Text(
+              initial,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(name,
+              style: AppTextStyles.labelLarge,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+          Text(subject,
+              style: AppTextStyles.bodySmall,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    );
+  }
 }
