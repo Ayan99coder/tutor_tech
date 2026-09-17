@@ -5,7 +5,7 @@ import 'package:tutor_tech/features/session/repository/session_repo.dart';
 
 
 class SessionStreamNotifier extends StreamNotifier<List<SessionModel>> {
-  late final SessionRepo repo;
+  late  SessionRepo repo;
 
   @override
   Stream<List<SessionModel>> build() {

@@ -25,128 +25,146 @@ class StudentDashboardScreen extends ConsumerWidget {
 
     final studentAsync = ref.watch(studentProvider(user.id));
     final sessionState = ref.watch(studentSessions(user.id));
+
+    Future<void> onRefresh() async {
+      ref.invalidate(studentProvider(user.id));
+      ref.invalidate(studentSessions(user.id));
+      try {
+        await ref.read(studentProvider(user.id).future);
+      } catch (_) {}
+    }
+
     return Scaffold(
       body: Center(
         child: studentAsync.when(
-          loading: () {
-            return const CircularProgressIndicator();
-          },
+          loading: () => const CircularProgressIndicator(),
 
           error: (error, stackTrace) {
             return CustomErrorWidget(
               message: error.toString(),
-              onRetry: () {
-                ref.invalidate(studentProvider(user.id));
-              },
+              onRetry: () => ref.invalidate(studentProvider(user.id)),
             );
           },
 
           data: (student) {
             final state = student.student;
-            return CustomScrollView(
-              slivers: [
-                CustomSliverAppBar(
-                  title: 'My Learning Hub',
-                  showBackButton: false,
-                  showNotificationBell: true,
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppDimensions.paddingM),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    AppColors.primary,
-                                    AppColors.primaryLight,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusCard,
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Hello, ${state?.fullName ?? "Student"} 👋',
-                                    style: AppTextStyles.h2.copyWith(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Assigned Tutor : ${student.assignedTutors ?? []} ',
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                      color: AppColors.accentLight,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Wrap(
-                                    spacing: 8,
-                                    children: (state?.selectedSubjects ?? [])
-                                        .map((s) {
-                                          return Chip(
-                                            label: Text(
-                                              s.toUpperCase().replaceAll(
-                                                '_',
-                                                ' ',
-                                              ),
-                                            ),
-                                            backgroundColor:
-                                                AppColors.secondary,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: .circular(12),
-                                            ),
-                                            labelStyle: AppTextStyles.labelSmall
-                                                .copyWith(color: Colors.white),
-                                          );
-                                        })
-                                        .toList(),
-                                  ),
+            return RefreshIndicator(
+              color: AppColors.studentColor,
+              backgroundColor: AppColors.surfaceWhite,
+              onRefresh: onRefresh,
+              child: CustomScrollView(
+                // AlwaysScrollableScrollPhysics needed so RefreshIndicator
+                // works even when content doesn't fill the screen
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  CustomSliverAppBar(
+                    title: 'My Learning Hub',
+                    showBackButton: false,
+                    showNotificationBell: true,
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppDimensions.paddingM),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── Greeting card ────────────────────────────
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.primary,
+                                  AppColors.primaryLight,
                                 ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                            )
-                            .animate()
-                            .fade(duration: const Duration(milliseconds: 500))
-                            .scale(
-                              begin: const Offset(0.95, 0.95),
-                              end: const Offset(1.0, 1.0),
-                              curve: Curves.easeOutCubic,
-                              duration: const Duration(milliseconds: 500),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusCard,
+                              ),
                             ),
-                        SizedBox(height: 24),
-                        Text("Today's Sessions", style: AppTextStyles.h3),
-                        sessionState.when(
-                          data: (sessions) {
-                            if (sessions.isEmpty) {
-                              return const Text('No sessions scheduled.');
-                            }
-                            return Column(
-                              children: sessions.map((session) {
-                                return SessionCard(
-                                  session: session,
-                                  isTutor: false,
-                                );
-                              }).toList(),
-                            );
-                          },
-                          loading: () => const CircularProgressIndicator(),
-                          error: (error, stack) => Text(error.toString()),
-                        ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Hello, ${state?.fullName ?? "Student"} 👋',
+                                  style: AppTextStyles.h2.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Assigned Tutor : ${student.assignedTutors ?? []} ',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.accentLight,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  children: (state?.selectedSubjects ?? [])
+                                      .map((s) {
+                                        return Chip(
+                                          label: Text(
+                                            s
+                                                .toUpperCase()
+                                                .replaceAll('_', ' '),
+                                          ),
+                                          backgroundColor: AppColors.secondary,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          labelStyle:
+                                              AppTextStyles.labelSmall.copyWith(
+                                            color: Colors.white,
+                                          ),
+                                        );
+                                      })
+                                      .toList(),
+                                ),
+                              ],
+                            ),
+                          )
+                              .animate()
+                              .fade(duration: const Duration(milliseconds: 500))
+                              .scale(
+                                begin: const Offset(0.95, 0.95),
+                                end: const Offset(1.0, 1.0),
+                                curve: Curves.easeOutCubic,
+                                duration: const Duration(milliseconds: 500),
+                              ),
+                          const SizedBox(height: 24),
 
-                      ],
+                          // ── Today's Sessions ─────────────────────────
+                          Text("Today's Sessions", style: AppTextStyles.h3),
+                          const SizedBox(height: 8),
+                          sessionState.when(
+                            data: (sessions) {
+                              if (sessions.isEmpty) {
+                                return const Text('No sessions scheduled.');
+                              }
+                              return Column(
+                                children: sessions.map((session) {
+                                  return SessionCard(
+                                    session: session,
+                                    isTutor: false,
+                                  );
+                                }).toList(),
+                              );
+                            },
+                            loading: () => const CircularProgressIndicator(),
+                            error: (error, stack) => Text(error.toString()),
+                          ),
+                          const SizedBox(height: 140),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         ),

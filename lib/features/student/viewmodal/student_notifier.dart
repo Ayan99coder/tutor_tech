@@ -7,7 +7,7 @@ import 'package:tutor_tech/features/student/viewmodal/student_state.dart';
 import 'package:tutor_tech/features/tutor/model/tutor_model.dart';
 
 class StudentNotifier extends FamilyAsyncNotifier<StudentState, String> {
-  late final StudentRepository repo;
+  late  StudentRepository repo;
 
   @override
   Future<StudentState> build(String id) async {

@@ -6,7 +6,7 @@ import 'package:tutor_tech/features/session/repository/session_repo.dart';
 
 class StudentSessionStreamNotifier
     extends AutoDisposeFamilyStreamNotifier<List<SessionModel>, String> {
-  late final SessionRepo repo;
+  late  SessionRepo repo;
 
   @override
   Stream<List<SessionModel>> build(String id) {
