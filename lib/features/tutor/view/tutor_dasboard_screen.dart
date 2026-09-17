@@ -147,12 +147,12 @@ class TutorDashboardScreen extends ConsumerWidget {
                                   .toList();
 
                               if (matchedSubjects.isEmpty) {
-                                return const SizedBox.shrink();
+                                return const Text('there is no student of your subject');
                               }
 
                               return _buildStudentAvatarCard(
                                 student.email,
-                                matchedSubjects.first,
+                                matchedSubjects.toString(),
                               );
                             }),
                             const SizedBox(height: 140),

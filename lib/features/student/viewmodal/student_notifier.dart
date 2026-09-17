@@ -11,6 +11,7 @@ class StudentNotifier extends FamilyAsyncNotifier<StudentState, String> {
 
   @override
   Future<StudentState> build(String id) async {
+    ref.keepAlive();
     repo = ref.read(studentRepoProvider);
     final results = await Future.wait([
       repo.getStudentById(id),
