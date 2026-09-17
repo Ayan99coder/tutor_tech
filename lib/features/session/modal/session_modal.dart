@@ -26,6 +26,7 @@ class SessionModel {
   final List<String> studentIds;
   final String subject;
   final String? level;
+  final int durationMinutes;
   final int groupSize;
   final AudienceScope audienceScope;
   final ClassroomPlatform platform;
@@ -42,6 +43,7 @@ class SessionModel {
     required this.studentIds,
     required this.subject,
     this.level,
+    this.durationMinutes = 60,
     required this.groupSize,
     required this.audienceScope,
     required this.platform,
@@ -59,6 +61,7 @@ class SessionModel {
     List<String>? studentIds,
     String? subject,
     String? level,
+    int? durationMinutes,
     int? groupSize,
     AudienceScope? audienceScope,
     ClassroomPlatform? platform,
@@ -75,6 +78,7 @@ class SessionModel {
       studentIds: studentIds ?? this.studentIds,
       subject: subject ?? this.subject,
       level: level ?? this.level,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
       groupSize: groupSize ?? this.groupSize,
       audienceScope: audienceScope ?? this.audienceScope,
       platform: platform ?? this.platform,
@@ -94,6 +98,7 @@ class SessionModel {
       'studentIds': studentIds,
       'subject': subject,
       'level': level,
+      'durationMinutes': durationMinutes,
       'groupSize': groupSize,
       'audienceScope': audienceScope.name,
       'platform': platform.name,
@@ -101,27 +106,29 @@ class SessionModel {
       'scheduledAt': Timestamp.fromDate(scheduledAt),
       'notes': notes,
       'createdAt': Timestamp.fromDate(createdAt),
-
-      // Session status
       'sessionStatus': sessionStatus.name,
     };
   }
 
   factory SessionModel.fromJson(Map<String, dynamic> json) {
     return SessionModel(
-      // Firestore doc.id is stored as 'id' field in the map (or fallback to empty)
       id: (json['id'] as String?) ?? '',
       title: (json['title'] as String?) ?? '',
       tutorId: (json['tutorId'] as String?) ?? '',
       studentIds: List<String>.from(json['studentIds'] ?? []),
       subject: (json['subject'] as String?) ?? '',
       level: json['level'] as String?,
-      groupSize: (json['groupSize'] as int?) ?? 1,
+      durationMinutes:
+      (json['durationMinutes'] as num?)?.toInt() ?? 60,
+      groupSize:
+      (json['groupSize'] as num?)?.toInt() ?? 1,
       audienceScope: AudienceScope.values.byName(
-        (json['audienceScope'] as String?) ?? AudienceScope.public.name,
+        (json['audienceScope'] as String?) ??
+            AudienceScope.public.name,
       ),
       platform: ClassroomPlatform.values.byName(
-        (json['platform'] as String?) ?? ClassroomPlatform.zoom.name,
+        (json['platform'] as String?) ??
+            ClassroomPlatform.zoom.name,
       ),
       meetingLink: (json['meetingLink'] as String?) ?? '',
       scheduledAt: json['scheduledAt'] != null
@@ -131,10 +138,9 @@ class SessionModel {
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
-
-      // Session status
       sessionStatus: SessionStatus.values.byName(
-        (json['sessionStatus'] as String?) ?? SessionStatus.scheduled.name,
+        (json['sessionStatus'] as String?) ??
+            SessionStatus.scheduled.name,
       ),
     );
   }

@@ -20,6 +20,7 @@ class TutorDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     late final String tutorId;
+
     final currentUser = ref.read(authNotifierProvider).currentUser;
     tutorId = currentUser?.id ?? '';
     final state = ref.watch(tutorProvider(tutorId));
@@ -109,7 +110,8 @@ class TutorDashboardScreen extends ConsumerWidget {
                                   children: sessions.map((session) {
                                     return SessionCard(
                                       session: session,
-                                      id: tutorId,
+                                      isTutor: true,
+
                                     );
                                   }).toList(),
                                 );
@@ -133,10 +135,24 @@ class TutorDashboardScreen extends ConsumerWidget {
                             // SECTION: My Students (Dynamic)
                             Text('My Students', style: AppTextStyles.h3),
                             const SizedBox(height: 12),
-                            ...tutor.stdByTutor.map((e) {
+                            ...tutor.stdByTutor.map((student) {
+                              final matchedSubjects = student.selectedSubjects
+                                  .where(
+                                    (studentSubject) => tutor.tutor!.subjectExpertise.any(
+                                      (expertise) =>
+                                  expertise.toLowerCase().trim() ==
+                                      studentSubject.toLowerCase().trim(),
+                                ),
+                              )
+                                  .toList();
+
+                              if (matchedSubjects.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
+
                               return _buildStudentAvatarCard(
-                                e.email,
-                                e.selectedSubjects.first,
+                                student.email,
+                                matchedSubjects.first,
                               );
                             }),
                             const SizedBox(height: 140),

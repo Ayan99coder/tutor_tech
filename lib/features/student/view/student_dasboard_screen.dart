@@ -133,7 +133,7 @@ class StudentDashboardScreen extends ConsumerWidget {
                               children: sessions.map((session) {
                                 return SessionCard(
                                   session: session,
-                                  id: user.id,
+                                  isTutor: false,
                                 );
                               }).toList(),
                             );
