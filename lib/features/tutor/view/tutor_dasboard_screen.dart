@@ -104,7 +104,7 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
   }
 
   // ── Pull-to-refresh ───────────────────────────────────────────────────────
-  Future<void> _onRefresh() async {
+  Future<void> _onRefresh() async {ref.invalidate(tutorProvider(_tutorId));
     ref.invalidate(studentPaginationProvider(_tutorId));
     _pagingController.refresh(); // pageKey = 0 se dobara shuru
   }

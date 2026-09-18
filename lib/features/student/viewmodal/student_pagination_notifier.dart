@@ -67,7 +67,7 @@ class StudentPaginationNotifier
 
   // Pull-to-refresh: build() dubara chalega, cursor reset hoga
   Future<void> refresh() async {
-    ref.invalidateSelf();
+      ref.invalidateSelf();
     await future;
   }
 }
