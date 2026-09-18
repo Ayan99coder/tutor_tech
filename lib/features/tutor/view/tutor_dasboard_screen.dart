@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:tutor_tech/features/auth/authProvider/auth_provider.dart';
 import 'package:tutor_tech/features/session/provider/session_provider.dart';
 import 'package:tutor_tech/features/student/model/student_model.dart';
+import 'package:tutor_tech/features/student/provider/student_provider.dart';
 import 'package:tutor_tech/features/tutor/provider/tutor_provider.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -23,62 +25,103 @@ class TutorDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
-  late final ScrollController _scrollController;
   late final String _tutorId;
+
+  // ── PagingController (infinite_scroll_pagination v5.x) ──────────────────────
+  //
+  // v5 mein API bilkul alag hai:
+  //
+  // CONSTRUCTOR:
+  //   fetchPage(pageKey)  → yeh function list return karta hai directly
+  //   getNextPageKey(state) → null return karo jab sab load ho jaye
+  //
+  // fetchPage mein hum apna Firestore call karte hain aur List<StudentModel> return karte hain.
+  // PagingController khud state manage karta hai — hum AsyncNotifier nahi use karte PagingController ke saath.
+  //
+  // ARCHITECTURE NOTE:
+  // PagingController v5 apna internal state rakhta hai.
+  // Isliye hum student pagination ke liye seedha repository call karte hain yahan se.
+  // StudentPaginationNotifier is case mein PagingController ke andar nahi aata —
+  // dono alag approaches hain:
+  //   Option A: PagingController alone (yeh implementation)
+  //   Option B: AsyncNotifier alone + ScrollController (guide mein explain kiya gaya)
+  late final PagingController<int, StudentModel> _pagingController;
+
+  // Page size — yahi batch size hai
+  static const int _pageSize = 20;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
     final currentUser = ref.read(authNotifierProvider).currentUser;
     _tutorId = currentUser?.id ?? '';
+
+    _pagingController = PagingController<int, StudentModel>(
+      // ── fetchPage: yahan actual data fetch hota hai ───────────────────
+      // pageKey = 0 (pehla page), 1 (doosra page), etc.
+      // Hum ise use nahi karte directly — Riverpod repository se paginate karte hain
+      fetchPage: _fetchStudentsPage,
+
+      // ── getNextPageKey: kya aur pages hain? ──────────────────────────
+      // state.lastPageIsEmpty = last page mein koi item nahi aaya = khatam
+      // state.nextIntPageKey  = current page number + 1
+      getNextPageKey: (state) =>
+          state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    );
   }
 
-  @override
-  void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
-    super.dispose();
-  }
-
-  /// Triggered when the user scrolls within 200px of the bottom.
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final current = _scrollController.position.pixels;
-    if (current >= maxScroll - 200) {
-      ref.read(tutorProvider(_tutorId).notifier).loadNextPage();
+  // ── Actual data fetch function ────────────────────────────────────────────
+  // PagingController yeh call karta hai automatically jab next page chahiye
+  // pageKey = 0, 1, 2... (hum cursor ke liye Riverpod notifier use karte hain)
+  Future<List<StudentModel>> _fetchStudentsPage(int pageKey) async {
+    // Riverpod notifier se next page lo
+    // pageKey == 0 → pehla page (notifier fresh build() chalega)
+    // pageKey > 0  → next page (notifier apna cursor remember karta hai)
+    if (pageKey == 0) {
+      // Fresh start: Riverpod state reset karo
+      ref.invalidate(studentPaginationProvider(_tutorId));
     }
+
+    // Notifier se page load karo aur wait karo
+    await ref
+        .read(studentPaginationProvider(_tutorId).notifier)
+        .loadNextPage();
+
+    // Riverpod state se students nikalo
+    final paginationState =
+        ref.read(studentPaginationProvider(_tutorId)).valueOrNull;
+
+    if (paginationState == null) return [];
+
+    // Is page ke naye students nikalo
+    // Total students mein se pehle wale pageKey * _pageSize skip karo
+    final startIndex = pageKey * _pageSize;
+    final allStudents = paginationState.students;
+
+    if (startIndex >= allStudents.length) return [];
+
+    return allStudents.sublist(startIndex);
   }
 
-  /// Pull-to-refresh: resets pagination and re-fetches everything.
+  // ── Pull-to-refresh ───────────────────────────────────────────────────────
   Future<void> _onRefresh() async {
-    ref.invalidate(tutorProvider(_tutorId));
-    try {
-      await ref.read(tutorProvider(_tutorId).future);
-    } catch (_) {}
+    ref.invalidate(studentPaginationProvider(_tutorId));
+    _pagingController.refresh(); // pageKey = 0 se dobara shuru
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(tutorProvider(_tutorId));
+    final tutorAsync = ref.watch(tutorProvider(_tutorId));
     final sessionState = ref.watch(tutorSessions(_tutorId));
 
     return Scaffold(
-      body: state.when(
+      body: tutorAsync.when(
         data: (tutor) {
-          final students = tutor.students;
-          final isLoadingMore = tutor.isLoadingMore;
-          final hasMore = tutor.hasMore;
-
           return RefreshIndicator(
             color: AppColors.tutorColor,
             backgroundColor: AppColors.surfaceWhite,
             onRefresh: _onRefresh,
             child: CustomScrollView(
-              controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 CustomSliverAppBar(
@@ -92,7 +135,7 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── Greeting card ──────────────────────────────
+                        // ── Greeting card ────────────────────────────────
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(20),
@@ -131,7 +174,7 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // ── Quick actions ──────────────────────────────
+                        // ── Quick actions ────────────────────────────────
                         CustomButton(
                           label: 'Upload Session 📚',
                           variant: ButtonVariant.primary,
@@ -139,7 +182,7 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // ── Today's Sessions ───────────────────────────
+                        // ── Today's Sessions ─────────────────────────────
                         Text("Today's Sessions", style: AppTextStyles.h3),
                         const SizedBox(height: 8),
                         sessionState.when(
@@ -153,7 +196,7 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                                     s.studentIds.isNotEmpty
                                         ? s.studentIds.first
                                         : '';
-                                final matchedStudent = tutor.students
+                                final matchedStudent = tutor.stdByTutor
                                     .where(
                                       (st) => st.userId == firstStudentId,
                                     )
@@ -169,12 +212,8 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                                   isTutor: true,
                                   tutorName: tutor.tutor?.fullName ?? '',
                                   studentName: studentName,
-                                  onMarkCompleted: () {
-                                    // TODO: implement mark completed
-                                  },
-                                  onMarkDismissed: () {
-                                    // TODO: implement mark dismissed
-                                  },
+                                  onMarkCompleted: () {},
+                                  onMarkDismissed: () {},
                                 );
                               }).toList(),
                             );
@@ -186,75 +225,111 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // ── Pending Reports ────────────────────────────
+                        // ── Pending Reports ──────────────────────────────
                         Text(
                           'Pending Lesson Reports',
                           style: AppTextStyles.h3,
                         ),
                         const SizedBox(height: 24),
 
-                        // ── My Students header ─────────────────────────
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('My Students', style: AppTextStyles.h3),
-                            if (students.isNotEmpty)
-                              Text(
-                                '${students.length}${hasMore ? '+' : ''} students',
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                          ],
-                        ),
+                        // ── My Students header ───────────────────────────
+                        Text('My Students', style: AppTextStyles.h3),
                         const SizedBox(height: 12),
-
-                        // ── Students list ──────────────────────────────
-                        if (students.isEmpty && !isLoadingMore)
-                          _EmptyStudentsCard()
-                        else
-                          _StudentCardRow(
-                            students: students,
-                            tutorSubjects:
-                                tutor.tutor?.subjectExpertise ?? [],
-                          ),
-
-                        // ── Pagination loading indicator ───────────────
-                        if (isLoadingMore)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: AppColors.tutorColor,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        // ── End of list indicator ──────────────────────
-                        if (!hasMore && students.isNotEmpty)
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: Text(
-                                '— All students loaded —',
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textHint,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        const SizedBox(height: 140),
                       ],
                     ),
                   ),
                 ),
+
+                // ── Students — Infinite Scroll List ──────────────────────────
+                // PagedSliverList v5 signature:
+                //   state          = pagingController.value (PagingState)
+                //   fetchNextPage  = pagingController.fetchNextPage (method ref)
+                //   builderDelegate = items/loading/error/empty builders
+                PagedSliverList<int, StudentModel>(
+                  state: _pagingController.value,
+                  fetchNextPage: _pagingController.fetchNextPage,
+                  builderDelegate: PagedChildBuilderDelegate<StudentModel>(
+                    // ── Har student card ─────────────────────────────────
+                    itemBuilder: (context, student, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.paddingM,
+                          vertical: 4,
+                        ),
+                        child: _StudentListTile(student: student),
+                      );
+                    },
+
+                    // ── Pehle page loading ───────────────────────────────
+                    firstPageProgressIndicatorBuilder: (_) => const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.tutorColor,
+                        ),
+                      ),
+                    ),
+
+                    // ── Next page loading (list end mein) ────────────────
+                    newPageProgressIndicatorBuilder: (_) => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: AppColors.tutorColor,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // ── Koi student nahi ─────────────────────────────────
+                    noItemsFoundIndicatorBuilder: (_) =>
+                        const _EmptyStudentsCard(),
+
+                    // ── Error widget + Retry ─────────────────────────────
+                    firstPageErrorIndicatorBuilder: (_) => Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: AppColors.error,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Students load nahi ho sake',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: () => _pagingController.refresh(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // ── Sab students load ho gaye ────────────────────────
+                    noMoreItemsIndicatorBuilder: (_) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: Text(
+                          '— All students loaded —',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textHint,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Bottom padding ─────────────────────────────────────────────
+                const SliverToBoxAdapter(child: SizedBox(height: 140)),
               ],
             ),
           )
@@ -294,65 +369,27 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
       ),
     );
   }
-}
-
-// ─── Student Card Row ──────────────────────────────────────────────────────────
-class _StudentCardRow extends StatelessWidget {
-  const _StudentCardRow({
-    required this.students,
-    required this.tutorSubjects,
-  });
-
-  final List<StudentModel> students;
-  final List<String> tutorSubjects;
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 155,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: students.length,
-        itemBuilder: (context, index) {
-          final student = students[index];
-          final matchedSubjects = student.selectedSubjects
-              .where(
-                (subj) => tutorSubjects.any(
-                  (exp) =>
-                      exp.toLowerCase().trim() == subj.toLowerCase().trim(),
-                ),
-              )
-              .toList();
-
-          return _StudentAvatarCard(
-            fullName: student.fullName,
-            subjectLabel: matchedSubjects.join(', '),
-          );
-        },
-      ),
-    );
+  void dispose() {
+    _pagingController.dispose();
+    super.dispose();
   }
 }
 
-// ─── Individual Student Card ───────────────────────────────────────────────────
-class _StudentAvatarCard extends StatelessWidget {
-  const _StudentAvatarCard({
-    required this.fullName,
-    required this.subjectLabel,
-  });
+// ─── Individual Student List Tile ──────────────────────────────────────────────
+class _StudentListTile extends StatelessWidget {
+  const _StudentListTile({required this.student});
 
-  final String fullName;
-  final String subjectLabel;
+  final StudentModel student;
 
   @override
   Widget build(BuildContext context) {
-    final initial =
-        fullName.trim().isNotEmpty ? fullName.trim()[0].toUpperCase() : 'S';
+    final initial = student.fullName.trim().isNotEmpty
+        ? student.fullName.trim()[0].toUpperCase()
+        : 'S';
 
     return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surfaceWhite,
@@ -366,39 +403,43 @@ class _StudentAvatarCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
           CircleAvatar(
-            radius: 26,
+            radius: 22,
             backgroundColor: AppColors.studentColor,
             child: Text(
               initial,
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: 16,
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            fullName,
-            style: AppTextStyles.labelLarge,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subjectLabel,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.tutorColor,
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  student.fullName,
+                  style: AppTextStyles.labelLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (student.selectedSubjects.isNotEmpty)
+                  Text(
+                    student.selectedSubjects.join(', '),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.tutorColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -408,10 +449,13 @@ class _StudentAvatarCard extends StatelessWidget {
 
 // ─── Empty State ───────────────────────────────────────────────────────────────
 class _EmptyStudentsCard extends StatelessWidget {
+  const _EmptyStudentsCard();
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      margin: const EdgeInsets.all(AppDimensions.paddingM),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.background,
@@ -423,7 +467,7 @@ class _EmptyStudentsCard extends StatelessWidget {
           Icon(Icons.people_outline, size: 40, color: AppColors.textHint),
           const SizedBox(height: 8),
           Text(
-            'No students found for your subjects',
+            'No students assigned yet',
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),

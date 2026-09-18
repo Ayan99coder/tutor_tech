@@ -41,6 +41,12 @@ class StudentModel {
   final ApplicationStatus applicationStatus;
   final DateTime createdAt;
 
+  /// Jab admin/tutor kisi student ko assign kare tab yeh set hoga.
+  /// Registration ke waqt null hota hai.
+  /// Yahi field simple pagination query allow karta hai:
+  ///   .where('tutorId', isEqualTo: tutorId) — NO composite index needed!
+  final String? tutorId;
+
   const StudentModel({
     required this.id,
     required this.userId,
@@ -54,6 +60,7 @@ class StudentModel {
     this.parentEmail,
     required this.applicationStatus,
     required this.createdAt,
+    this.tutorId,
   });
 
   factory StudentModel.fromJson(Map<String, dynamic> json) {
@@ -87,6 +94,9 @@ class StudentModel {
       ),
 
       createdAt: (json['createdAt'] as Timestamp).toDate(),
+
+      // Null-safe: purane documents mein field nahi hogi
+      tutorId: json['tutorId'] as String?,
     );
   }
 
@@ -104,6 +114,8 @@ class StudentModel {
       'parentEmail': parentEmail,
       'applicationStatus': applicationStatus.name,
       'createdAt': Timestamp.fromDate(createdAt),
+      // null hone par Firestore mein field nahi jayegi (bandwidth save)
+      if (tutorId != null) 'tutorId': tutorId,
     };
   }
 
@@ -120,6 +132,8 @@ class StudentModel {
     String? parentEmail,
     ApplicationStatus? applicationStatus,
     DateTime? createdAt,
+    String? tutorId,
+    bool clearTutorId = false,
   }) {
     return StudentModel(
       id: id ?? this.id,
@@ -137,6 +151,7 @@ class StudentModel {
       applicationStatus:
       applicationStatus ?? this.applicationStatus,
       createdAt: createdAt ?? this.createdAt,
+      tutorId: clearTutorId ? null : (tutorId ?? this.tutorId),
     );
   }
 }
