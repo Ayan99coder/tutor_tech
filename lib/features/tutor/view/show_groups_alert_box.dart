@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tutor_tech/core/widgets/custom_textfield.dart';
 import 'package:tutor_tech/features/groups/provider/providers.dart';
+import 'package:tutor_tech/features/student/model/student_model.dart';
+import 'package:tutor_tech/features/student/provider/student_provider.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_dimensions.dart';
 import '../../groups/model/group_model.dart';
 
 class _StudentItem {
@@ -49,6 +53,7 @@ class _StudentGroupManagementState
   Widget build(BuildContext context) {
     final screenH = MediaQuery.of(context).size.height;
     final state = ref.watch(groupByTutorIdProvider(widget.tutorId));
+    final stdPaginationState = ref.read(studentPaginationProvider(widget.tutorId));
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
@@ -225,7 +230,40 @@ class _StudentGroupManagementState
 
   Widget _createGroupView() {
     return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CustomTextField(
+                    label: 'Group Name',
+                    hint: 'e.g. GCSE Physics Higher Batch',
+                    controller: _nameCtrl,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Text(
+                        'Select Students',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const Spacer(),
 
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -250,19 +288,32 @@ class _StudentGroupManagementState
               ),
               TextButton.icon(
                 onPressed: () => setState(() => _isCreating = true),
-                icon: const Icon(Icons.add, color: AppColors.tutorColor, size: 18),
-                label: const Text('New Group',
-                    style: TextStyle(color: AppColors.tutorColor,
-                        fontWeight: FontWeight.bold)),
+                icon: const Icon(
+                  Icons.add,
+                  color: AppColors.tutorColor,
+                  size: 18,
+                ),
+                label: const Text(
+                  'New Group',
+                  style: TextStyle(
+                    color: AppColors.tutorColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
         ),
         const Divider(height: 1),
-        ListView.separated( itemBuilder: (_, i) => _groupCard(_groups[i]), separatorBuilder:(_, __) => const SizedBox(height: 8), itemCount: groups.length)
+        ListView.separated(
+          itemBuilder: (_, i) => _groupCard(_groups[i]),
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemCount: groups.length,
+        ),
       ],
     );
   }
+
   Widget _groupCard(StudentGroupModel g) {
     final count = g.studentIds.length;
     final namesList = g.studentNames.isNotEmpty
@@ -282,12 +333,20 @@ class _StudentGroupManagementState
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         leading: CircleAvatar(
           backgroundColor: AppColors.tutorColor.withValues(alpha: 0.12),
-          child: const Icon(Icons.groups_rounded,
-              color: AppColors.tutorColor, size: 20),
+          child: const Icon(
+            Icons.groups_rounded,
+            color: AppColors.tutorColor,
+            size: 20,
+          ),
         ),
-        title: Text(g.groupName,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
+        title: Text(
+          g.groupName,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+        ),
         subtitle: Text(
           '$count student(s) • $namesList',
           maxLines: 2,
@@ -295,18 +354,26 @@ class _StudentGroupManagementState
           style: const TextStyle(fontSize: 12, color: Colors.black45),
         ),
         trailing: OutlinedButton.icon(
-          onPressed: () {
-          },
-          icon: const Icon(Icons.chat_bubble_outline,
-              size: 14, color: AppColors.tutorColor),
-          label: const Text('Chat',
-              style: TextStyle(color: AppColors.tutorColor,
-                  fontSize: 12, fontWeight: FontWeight.bold)),
+          onPressed: () {},
+          icon: const Icon(
+            Icons.chat_bubble_outline,
+            size: 14,
+            color: AppColors.tutorColor,
+          ),
+          label: const Text(
+            'Chat',
+            style: TextStyle(
+              color: AppColors.tutorColor,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: AppColors.tutorColor),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20)),
+              borderRadius: BorderRadius.circular(20),
+            ),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
@@ -314,5 +381,4 @@ class _StudentGroupManagementState
       ),
     );
   }
-
 }
