@@ -224,7 +224,9 @@ class _StudentGroupManagementState
   }
 
   Widget _createGroupView() {
-    return Column();
+    return Column(
+
+    );
   }
 
   Widget _groupsListView(List<StudentGroupModel> groups) {
