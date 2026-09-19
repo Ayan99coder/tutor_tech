@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tutor_tech/features/groups/provider/providers.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../groups/model/group_model.dart';
@@ -17,7 +19,9 @@ class _StudentItem {
 }
 
 class StudentGroupManagement extends ConsumerStatefulWidget {
-  const StudentGroupManagement({super.key});
+  final String tutorId;
+
+  const StudentGroupManagement({super.key, required this.tutorId});
 
   @override
   ConsumerState<StudentGroupManagement> createState() =>
@@ -32,12 +36,8 @@ class _StudentGroupManagementState
   List<_StudentItem> _students = [];
 
   final Set<String> _selectedIds = {};
-
-  bool _isLoading = true;
   bool _isCreating = false;
   bool _isSaving = false;
-
-  String? _error;
 
   @override
   void dispose() {
@@ -48,7 +48,7 @@ class _StudentGroupManagementState
   @override
   Widget build(BuildContext context) {
     final screenH = MediaQuery.of(context).size.height;
-
+    final state = ref.watch(groupByTutorIdProvider(widget.tutorId));
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
@@ -66,7 +66,27 @@ class _StudentGroupManagementState
             ),
           ],
         ),
-        child: Column(children: [_buildHeader()]),
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(
+              child: _isCreating
+                  ? _createGroupView()
+                  : state.when(
+                      data: (group) {
+                        if (group.isEmpty) return _emptyGroupsView();
+                        return _groupsListView(group);
+                      },
+                      error: (error, t) {
+                        return _errorView(error.toString());
+                      },
+                      loading: () {
+                        return _loadingView();
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -119,6 +139,7 @@ class _StudentGroupManagementState
       ),
     );
   }
+
   Widget _loadingView() {
     return const Center(
       child: Column(
@@ -131,7 +152,8 @@ class _StudentGroupManagementState
       ),
     );
   }
-  Widget _errorView() {
+
+  Widget _errorView(String? error) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -140,13 +162,17 @@ class _StudentGroupManagementState
           children: [
             const Icon(Icons.error_outline, color: Colors.red, size: 48),
             const SizedBox(height: 8),
-            Text(_error!, textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.black54, fontSize: 13)),
+            Text(
+              error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.black54, fontSize: 13),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.tutorColor),
-              onPressed: (){},
+                backgroundColor: AppColors.tutorColor,
+              ),
+              onPressed: () {},
               child: const Text('Retry', style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -154,25 +180,39 @@ class _StudentGroupManagementState
       ),
     );
   }
+
   Widget _emptyGroupsView() {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.group_add_rounded, size: 60, color: AppColors.tutorColor),
+          const Icon(
+            Icons.group_add_rounded,
+            size: 60,
+            color: AppColors.tutorColor,
+          ),
           const SizedBox(height: 12),
-          const Text('No groups yet',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,
-                  color: Colors.black87)),
+          const Text(
+            'No groups yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
           const SizedBox(height: 4),
-          const Text('Tap "New Group" to create one',
-              style: TextStyle(fontSize: 13, color: Colors.black45)),
+          const Text(
+            'Tap "New Group" to create one',
+            style: TextStyle(fontSize: 13, color: Colors.black45),
+          ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: () => setState(() => _isCreating = true),
             icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text('Create First Group',
-                style: TextStyle(color: Colors.white)),
+            label: const Text(
+              'Create First Group',
+              style: TextStyle(color: Colors.white),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.tutorColor,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -182,4 +222,95 @@ class _StudentGroupManagementState
       ),
     );
   }
+
+  Widget _createGroupView() {
+    return Column();
+  }
+
+  Widget _groupsListView(List<StudentGroupModel> groups) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 12, 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  groups.length == 1
+                      ? 'Group (${groups.length})'
+                      : 'Groups (${groups.length})',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => setState(() => _isCreating = true),
+                icon: const Icon(Icons.add, color: AppColors.tutorColor, size: 18),
+                label: const Text('New Group',
+                    style: TextStyle(color: AppColors.tutorColor,
+                        fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        ListView.separated( itemBuilder: (_, i) => _groupCard(_groups[i]), separatorBuilder:(_, __) => const SizedBox(height: 8), itemCount: groups.length)
+      ],
+    );
+  }
+  Widget _groupCard(StudentGroupModel g) {
+    final count = g.studentIds.length;
+    final namesList = g.studentNames.isNotEmpty
+        ? g.studentNames.join(', ')
+        : (count > 0 ? '$count student(s)' : 'No students');
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.tutorColor.withValues(alpha: 0.25)),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        leading: CircleAvatar(
+          backgroundColor: AppColors.tutorColor.withValues(alpha: 0.12),
+          child: const Icon(Icons.groups_rounded,
+              color: AppColors.tutorColor, size: 20),
+        ),
+        title: Text(g.groupName,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
+        subtitle: Text(
+          '$count student(s) • $namesList',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12, color: Colors.black45),
+        ),
+        trailing: OutlinedButton.icon(
+          onPressed: () {
+          },
+          icon: const Icon(Icons.chat_bubble_outline,
+              size: 14, color: AppColors.tutorColor),
+          label: const Text('Chat',
+              style: TextStyle(color: AppColors.tutorColor,
+                  fontSize: 12, fontWeight: FontWeight.bold)),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.tutorColor),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      ),
+    );
+  }
+
 }
