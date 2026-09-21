@@ -52,15 +52,10 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
     await ref
         .read(studentPaginationProvider(_tutorId).notifier)
         .loadNextPage();
-
-    // Riverpod state se students nikalo
     final paginationState =
         ref.read(studentPaginationProvider(_tutorId)).valueOrNull;
 
     if (paginationState == null) return [];
-
-    // Is page ke naye students nikalo
-    // Total students mein se pehle wale pageKey * _pageSize skip karo
     final startIndex = pageKey * _pageSize;
     final allStudents = paginationState.students;
 
