@@ -45,12 +45,13 @@ class TutorRepositoryImpl implements TutorRepository {
   }
 
   @override
+  @override
   Future<TutorStudentsPage> getStudentsByTutorPaginated(
-    String tutorId,
-    List<String> subjectExpertise, {
-    DocumentSnapshot? lastDocument,
-    int limit = 5,
-  }) async {
+      String tutorId,
+      List<String> subjectExpertise, {
+        DocumentSnapshot? lastDocument,
+        int limit = 5,
+      }) async {
     if (subjectExpertise.isEmpty) {
       return const TutorStudentsPage(
         students: [],
@@ -60,23 +61,30 @@ class TutorRepositoryImpl implements TutorRepository {
     }
 
     final subjects = subjectExpertise.take(30).toList();
-
-    var query = _firestore
+    Query<Map<String, dynamic>> query = _firestore
         .collection('students')
-        .where('selectedSubjects', arrayContainsAny: subjects)
-        .orderBy('createdAt', descending: true)
+        .where(
+      'selectedSubjects',
+      arrayContainsAny: subjects,
+    )
         .limit(limit);
 
+    // Cursor-based pagination
     if (lastDocument != null) {
       query = query.startAfterDocument(lastDocument);
     }
 
     final snap = await query.get();
 
+    final students = snap.docs.map((doc) {
+      return StudentModel.fromJson({
+        ...doc.data(),
+        'id': doc.id,
+      });
+    }).toList();
+
     return TutorStudentsPage(
-      students: snap.docs
-          .map((doc) => StudentModel.fromJson({...doc.data(), 'id': doc.id}))
-          .toList(),
+      students: students,
       lastDocument: snap.docs.isNotEmpty ? snap.docs.last : null,
       hasMore: snap.docs.length == limit,
     );

@@ -34,23 +34,31 @@ class StudentGroupRepositoryImpl implements StudentGroupRepo {
   Future<List<StudentGroupModel>> groupsByTutorId(String tutorId) async {
     final snapshot = await _groupsCollection
         .where('tutor_id', isEqualTo: tutorId)
-        .orderBy('created_at', descending: true)
         .get();
 
-    return snapshot.docs
+    final groups = snapshot.docs
         .map((doc) => StudentGroupModel.fromJson(doc.data(), doc.id))
         .toList();
+
+    // Dart side pe sort karo — composite index ki zaroorat nahi
+    groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return groups;
   }
 
   @override
   Future<List<StudentGroupModel>> groupsByStdId(String studentId) async {
     final snapshot = await _groupsCollection
         .where('student_ids', arrayContains: studentId)
-        .orderBy('created_at', descending: true)
         .get();
 
-    return snapshot.docs
+    final groups = snapshot.docs
         .map((doc) => StudentGroupModel.fromJson(doc.data(), doc.id))
         .toList();
+
+    // Dart side pe sort karo — composite index ki zaroorat nahi
+    groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return groups;
   }
 }

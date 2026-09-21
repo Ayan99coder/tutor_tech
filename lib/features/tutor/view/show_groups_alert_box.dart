@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:tutor_tech/core/widgets/custom_textfield.dart';
 import 'package:tutor_tech/features/groups/provider/providers.dart';
 import 'package:tutor_tech/features/student/model/student_model.dart';
@@ -8,6 +9,7 @@ import 'package:tutor_tech/features/student/provider/student_provider.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_text_styles.dart';
 import '../../groups/model/group_model.dart';
 
 class _StudentItem {
@@ -35,25 +37,56 @@ class StudentGroupManagement extends ConsumerStatefulWidget {
 class _StudentGroupManagementState
     extends ConsumerState<StudentGroupManagement> {
   final TextEditingController _nameCtrl = TextEditingController();
-
+  late final PagingController<int, StudentModel> _pagingController;
+  static const int _pageSize = 10;
   List<StudentGroupModel> _groups = [];
-  List<_StudentItem> _students = [];
 
   final Set<String> _selectedIds = {};
   bool _isCreating = false;
-  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pagingController = PagingController<int, StudentModel>(
+      fetchPage: _fetchStudentsPage,
+      getNextPageKey: (state) =>
+          state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    );
+  }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _pagingController.dispose();
     super.dispose();
+  }
+
+  Future<List<StudentModel>> _fetchStudentsPage(int pageKey) async {
+    if (pageKey == 0) {
+      ref.invalidate(studentPaginationProvider(widget.tutorId));
+    }
+    await ref
+        .read(studentPaginationProvider(widget.tutorId).notifier)
+        .loadNextPage();
+    final paginationState = ref
+        .read(studentPaginationProvider(widget.tutorId))
+        .valueOrNull;
+
+    if (paginationState == null) return [];
+
+    final startIndex = pageKey * _pageSize;
+    final allStudents = paginationState.students;
+
+    if (startIndex >= allStudents.length) return [];
+
+    return allStudents.sublist(startIndex);
   }
 
   @override
   Widget build(BuildContext context) {
     final screenH = MediaQuery.of(context).size.height;
     final state = ref.watch(groupByTutorIdProvider(widget.tutorId));
-    final stdPaginationState = ref.read(studentPaginationProvider(widget.tutorId));
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
@@ -231,35 +264,226 @@ class _StudentGroupManagementState
   Widget _createGroupView() {
     return Column(
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CustomTextField(
-                    label: 'Group Name',
-                    hint: 'e.g. GCSE Physics Higher Batch',
-                    controller: _nameCtrl,
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      const Text(
-                        'Select Students',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const Spacer(),
+        // Group name + selected count
+        Padding(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CustomTextField(
+                label: 'Group Name',
+                hint: 'e.g. GCSE Physics Higher Batch',
+                controller: _nameCtrl,
+              ),
 
-                    ],
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  const Text(
+                    'Select Students',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Selected students count
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.tutorColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${_selectedIds.length} Selected',
+                      style: const TextStyle(
+                        color: AppColors.tutorColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+
+        // Selectable students list
+        Expanded(
+          child: PagingListener<int, StudentModel>(
+            controller: _pagingController,
+            builder: (context, state, fetchNextPage) {
+              return PagedListView<int, StudentModel>(
+                state: state,
+                fetchNextPage: fetchNextPage,
+
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.paddingM,
+                ),
+
+                builderDelegate: PagedChildBuilderDelegate<StudentModel>(
+                  itemBuilder: (context, student, index) {
+                    final studentId = student.userId;
+
+                    final isSelected = _selectedIds.contains(studentId);
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.tutorColor.withValues(alpha: 0.07)
+                            : Colors.white,
+
+                        borderRadius: BorderRadius.circular(12),
+
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.tutorColor
+                              : AppColors.border,
+                        ),
+                      ),
+
+                      child: CheckboxListTile(
+                        value: isSelected,
+
+                        activeColor: AppColors.tutorColor,
+
+                        controlAffinity: ListTileControlAffinity.leading,
+
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                        ),
+
+                        title: Text(
+                          student.fullName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+
+                        subtitle: Text(
+                          student.selectedSubjects.isNotEmpty
+                              ? student.selectedSubjects.join(', ')
+                              : 'No subjects added',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                        ),
+
+                        secondary: CircleAvatar(
+                          backgroundColor: AppColors.tutorColor.withValues(
+                            alpha: 0.12,
+                          ),
+
+                          child: Text(
+                            student.fullName.trim().isNotEmpty
+                                ? student.fullName.trim()[0].toUpperCase()
+                                : 'S',
+
+                            style: const TextStyle(
+                              color: AppColors.tutorColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        onChanged: (selected) {
+                          setState(() {
+                            if (selected == true) {
+                              _selectedIds.add(studentId);
+                            } else {
+                              _selectedIds.remove(studentId);
+                            }
+                          });
+                        },
+                      ),
+                    );
+                  },
+
+                  // First page loading
+                  firstPageProgressIndicatorBuilder: (_) => const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.tutorColor,
+                    ),
+                  ),
+
+                  // Next page loading
+                  newPageProgressIndicatorBuilder: (_) => const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.tutorColor,
+                      ),
+                    ),
+                  ),
+
+                  // Empty list
+                  noItemsFoundIndicatorBuilder: (_) =>
+                      const _EmptyStudentsCard(),
+
+                  // Error
+                  firstPageErrorIndicatorBuilder: (_) => Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Students load nahi ho sake'),
+
+                        const SizedBox(height: 8),
+
+                        ElevatedButton(
+                          onPressed: _pagingController.refresh,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        Padding(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.tutorColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+
+              onPressed: _selectedIds.isEmpty
+                  ? null
+                  : () {
+                      // Selected students IDs
+                      final selectedStudentIds = _selectedIds.toList();
+
+                      // TODO: Create group in Firestore
+                      // _nameCtrl.text = Group name
+                      // selectedStudentIds = Selected student IDs
+                    },
+
+              icon: const Icon(Icons.group_add),
+
+              label: Text('Create Group (${_selectedIds.length})'),
             ),
           ),
         ),
@@ -378,6 +602,37 @@ class _StudentGroupManagementState
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _EmptyStudentsCard extends StatelessWidget {
+  const _EmptyStudentsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.all(AppDimensions.paddingM),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.people_outline, size: 40, color: AppColors.textHint),
+          const SizedBox(height: 8),
+          Text(
+            'No students assigned yet',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

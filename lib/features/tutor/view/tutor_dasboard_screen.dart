@@ -8,6 +8,7 @@ import 'package:tutor_tech/features/session/provider/session_provider.dart';
 import 'package:tutor_tech/features/student/model/student_model.dart';
 import 'package:tutor_tech/features/student/provider/student_provider.dart';
 import 'package:tutor_tech/features/tutor/provider/tutor_provider.dart';
+import 'package:tutor_tech/features/tutor/view/show_groups_alert_box.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -27,27 +28,7 @@ class TutorDashboardScreen extends ConsumerStatefulWidget {
 class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
   late final String _tutorId;
 
-  // ── PagingController (infinite_scroll_pagination v5.x) ──────────────────────
-  //
-  // v5 mein API bilkul alag hai:
-  //
-  // CONSTRUCTOR:
-  //   fetchPage(pageKey)  → yeh function list return karta hai directly
-  //   getNextPageKey(state) → null return karo jab sab load ho jaye
-  //
-  // fetchPage mein hum apna Firestore call karte hain aur List<StudentModel> return karte hain.
-  // PagingController khud state manage karta hai — hum AsyncNotifier nahi use karte PagingController ke saath.
-  //
-  // ARCHITECTURE NOTE:
-  // PagingController v5 apna internal state rakhta hai.
-  // Isliye hum student pagination ke liye seedha repository call karte hain yahan se.
-  // StudentPaginationNotifier is case mein PagingController ke andar nahi aata —
-  // dono alag approaches hain:
-  //   Option A: PagingController alone (yeh implementation)
-  //   Option B: AsyncNotifier alone + ScrollController (guide mein explain kiya gaya)
   late final PagingController<int, StudentModel> _pagingController;
-
-  // Page size — yahi batch size hai
   static const int _pageSize = 20;
 
   @override
@@ -57,22 +38,12 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
     _tutorId = currentUser?.id ?? '';
 
     _pagingController = PagingController<int, StudentModel>(
-      // ── fetchPage: yahan actual data fetch hota hai ───────────────────
-      // pageKey = 0 (pehla page), 1 (doosra page), etc.
-      // Hum ise use nahi karte directly — Riverpod repository se paginate karte hain
-      fetchPage: _fetchStudentsPage,
 
-      // ── getNextPageKey: kya aur pages hain? ──────────────────────────
-      // state.lastPageIsEmpty = last page mein koi item nahi aaya = khatam
-      // state.nextIntPageKey  = current page number + 1
+      fetchPage: _fetchStudentsPage,
       getNextPageKey: (state) =>
           state.lastPageIsEmpty ? null : state.nextIntPageKey,
     );
   }
-
-  // ── Actual data fetch function ────────────────────────────────────────────
-  // PagingController yeh call karta hai automatically jab next page chahiye
-  // pageKey = 0, 1, 2... (hum cursor ke liye Riverpod notifier use karte hain)
   Future<List<StudentModel>> _fetchStudentsPage(int pageKey) async {
     // Riverpod notifier se next page lo
     // pageKey == 0 → pehla page (notifier fresh build() chalega)
@@ -103,10 +74,10 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
     return allStudents.sublist(startIndex);
   }
 
-  // ── Pull-to-refresh ───────────────────────────────────────────────────────
+
   Future<void> _onRefresh() async {ref.invalidate(tutorProvider(_tutorId));
     ref.invalidate(studentPaginationProvider(_tutorId));
-    _pagingController.refresh(); // pageKey = 0 se dobara shuru
+    _pagingController.refresh();
   }
 
   @override
@@ -175,10 +146,37 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                         const SizedBox(height: 16),
 
                         // ── Quick actions ────────────────────────────────
-                        CustomButton(
-                          label: 'Upload Session 📚',
-                          variant: ButtonVariant.primary,
-                          onPressed: () => context.go('/assign-session'),
+                        Row(
+                          children: [
+                            // Upload Session Button
+                            Expanded(
+                              child: CustomButton(
+                                label: 'Upload Session 📚',
+                                variant: ButtonVariant.primary,
+                                onPressed: () => context.go('/assign-session'),
+                              ),
+                            ),
+
+                            const SizedBox(width: 12),
+
+                            // Create Group Button
+                            Expanded(
+                              child: CustomButton(
+                                label: 'Create Group 👥',
+                                variant: ButtonVariant.primary,
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return StudentGroupManagement(
+                                        tutorId: _tutorId,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 24),
 
@@ -240,95 +238,45 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                   ),
                 ),
 
-                // ── Students — Infinite Scroll List ──────────────────────────
-                // PagedSliverList v5 signature:
-                //   state          = pagingController.value (PagingState)
-                //   fetchNextPage  = pagingController.fetchNextPage (method ref)
-                //   builderDelegate = items/loading/error/empty builders
-                PagedSliverList<int, StudentModel>(
-                  state: _pagingController.value,
-                  fetchNextPage: _pagingController.fetchNextPage,
-                  builderDelegate: PagedChildBuilderDelegate<StudentModel>(
-                    // ── Har student card ─────────────────────────────────
-                    itemBuilder: (context, student, index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.paddingM,
-                          vertical: 4,
-                        ),
-                        child: _StudentListTile(student: student),
-                      );
-                    },
 
-                    // ── Pehle page loading ───────────────────────────────
-                    firstPageProgressIndicatorBuilder: (_) => const Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.tutorColor,
-                        ),
-                      ),
-                    ),
+                PagingListener<int, StudentModel>(
+                  controller: _pagingController,
+                  builder: (context, state, fetchNextPage) {
+                    return PagedSliverList<int, StudentModel>(
+                      state: state,
+                      fetchNextPage: fetchNextPage,
 
-                    // ── Next page loading (list end mein) ────────────────
-                    newPageProgressIndicatorBuilder: (_) => const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
+                      builderDelegate: PagedChildBuilderDelegate<StudentModel>(
+                        itemBuilder: (context, student, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppDimensions.paddingM,
+                              vertical: 4,
+                            ),
+                            child: _StudentListTile(student: student),
+                          );
+                        },
+
+                        firstPageProgressIndicatorBuilder: (_) =>
+                        const Center(
                           child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
                             color: AppColors.tutorColor,
                           ),
                         ),
-                      ),
-                    ),
 
-                    // ── Koi student nahi ─────────────────────────────────
-                    noItemsFoundIndicatorBuilder: (_) =>
+                        noItemsFoundIndicatorBuilder: (_) =>
                         const _EmptyStudentsCard(),
 
-                    // ── Error widget + Retry ─────────────────────────────
-                    firstPageErrorIndicatorBuilder: (_) => Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: AppColors.error,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Students load nahi ho sake',
-                            style: AppTextStyles.bodyMedium,
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: () => _pagingController.refresh(),
+                        firstPageErrorIndicatorBuilder: (_) => Center(
+                          child: ElevatedButton(
+                            onPressed: _pagingController.refresh,
                             child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // ── Sab students load ho gaye ────────────────────────
-                    noMoreItemsIndicatorBuilder: (_) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: Text(
-                          '— All students loaded —',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textHint,
                           ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
-
-                // ── Bottom padding ─────────────────────────────────────────────
                 const SliverToBoxAdapter(child: SizedBox(height: 140)),
               ],
             ),
