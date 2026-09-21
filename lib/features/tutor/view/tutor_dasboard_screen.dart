@@ -45,15 +45,10 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
     );
   }
   Future<List<StudentModel>> _fetchStudentsPage(int pageKey) async {
-    // Riverpod notifier se next page lo
-    // pageKey == 0 → pehla page (notifier fresh build() chalega)
-    // pageKey > 0  → next page (notifier apna cursor remember karta hai)
+
     if (pageKey == 0) {
-      // Fresh start: Riverpod state reset karo
       ref.invalidate(studentPaginationProvider(_tutorId));
     }
-
-    // Notifier se page load karo aur wait karo
     await ref
         .read(studentPaginationProvider(_tutorId).notifier)
         .loadNextPage();
@@ -222,15 +217,11 @@ class _TutorDashboardScreenState extends ConsumerState<TutorDashboardScreen> {
                           error: (e, _) => Text(e.toString()),
                         ),
                         const SizedBox(height: 24),
-
-                        // ── Pending Reports ──────────────────────────────
                         Text(
                           'Pending Lesson Reports',
                           style: AppTextStyles.h3,
                         ),
                         const SizedBox(height: 24),
-
-                        // ── My Students header ───────────────────────────
                         Text('My Students', style: AppTextStyles.h3),
                         const SizedBox(height: 12),
                       ],
